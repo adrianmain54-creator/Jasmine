@@ -543,12 +543,12 @@
     <div><p class="site-kicker">AFTER THE GAME</p><h2>Community chat</h2><p class="site-sub">Say hello, share a score, or find someone to play with.</p></div>
   </div>
   <div class="chat-shell">
-    <div class="chat-top"><div><h3 class="chat-title">The Minigames Lounge</h3><p class="chat-meta">COMMUNITY BOARD</p></div><span class="chat-meta">LOCAL PREVIEW</span></div>
+    <div class="chat-top"><div><h3 class="chat-title">The Minigames Lounge</h3><p class="chat-meta">COMMUNITY BOARD</p></div><span class="chat-meta" id="chatStatus">CONNECTING…</span></div>
     <div class="chat-feed" id="chatFeed" aria-live="polite"><p class="chat-empty" id="chatEmpty">No messages yet. Start the conversation.</p></div>
     <form class="chat-compose" id="chatForm">
       <div class="chat-compose-row"><input id="chatName" maxlength="20" value="Player" aria-label="Your name" placeholder="Your name"></div>
       <div class="chat-compose-row"><input id="chatInput" maxlength="500" autocomplete="off" aria-label="Message" placeholder="Write a message..." required><button class="chat-send" type="submit">Send</button></div>
-      <p class="chat-note">This preview saves messages in this browser only. Shared chat and accounts need the Supabase connection configured.</p>
+      <p class="chat-note">Messages are shared live with everyone visiting Jasmine.</p>
     </form>
   </div>
 </section>
@@ -560,37 +560,65 @@
     if(e.data.type==='mg-resize'){
       naturalHeight=Math.max(700,Math.min(5000,Number(e.data.height)||1450));
       frame.style.height=naturalHeight+'px';
-    }else if(e.data.type==='mg-close'){
-      /* The game closes inside the embedded games panel. The rest of Jasmine stays in place. */
-      document.body.style.overflow='';
-    }
+    }else if(e.data.type==='mg-close'){document.body.style.overflow='';}
   });
   frame.addEventListener('load',function(){try{naturalHeight=Math.max(700,frame.contentDocument.documentElement.scrollHeight);frame.style.height=naturalHeight+'px';}catch(e){}});
-  var feed=document.getElementById('chatFeed'),empty=document.getElementById('chatEmpty'),form=document.getElementById('chatForm'),name=document.getElementById('chatName'),input=document.getElementById('chatInput');
-  var messages=[];try{messages=JSON.parse(localStorage.getItem('minigames-community-preview')||'[]');if(!Array.isArray(messages))messages=[];}catch(e){messages=[];}
-  function render(){
-    feed.innerHTML='';
-    if(!messages.length){feed.appendChild(empty);return;}
-    messages.slice(-100).forEach(function(m){
-      var row=document.createElement('div');row.className='chat-message';
-      var avatar=document.createElement('div');avatar.className='chat-avatar';avatar.textContent=(m.name||'P').slice(0,1).toUpperCase();
-      var main=document.createElement('div');main.className='chat-msg-main';
-      var head=document.createElement('div');head.className='chat-msg-head';
-      var who=document.createElement('span');who.className='chat-msg-name';who.textContent=m.name;
-      var when=document.createElement('span');when.className='chat-msg-time';when.textContent=m.time;
-      var body=document.createElement('p');body.className='chat-msg-text';body.textContent=m.text;
-      head.appendChild(who);head.appendChild(when);main.appendChild(head);main.appendChild(body);row.appendChild(avatar);row.appendChild(main);feed.appendChild(row);
-    });
-    feed.scrollTop=feed.scrollHeight;
-  }
-  form.addEventListener('submit',function(e){
-    e.preventDefault();var text=input.value.trim(),who=name.value.trim().slice(0,20)||'Player';if(!text)return;
-    var now=new Date();messages.push({name:who,text:text,time:now.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})});
-    messages=messages.slice(-100);try{localStorage.setItem('minigames-community-preview',JSON.stringify(messages));}catch(e){}
-    input.value='';render();input.focus();
-  });
-  render();
 })();
+</script>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const supabase = createClient(
+  'https://jkossymjujldzsmxyutq.supabase.co',
+  'sb_publishable_a9aZehf-5egAc3GUg0BA_g_xtEcnv0q'
+);
+const feed=document.getElementById('chatFeed');
+const empty=document.getElementById('chatEmpty');
+const form=document.getElementById('chatForm');
+const nameInput=document.getElementById('chatName');
+const messageInput=document.getElementById('chatInput');
+const status=document.getElementById('chatStatus');
+let messages=[];
+function setStatus(value){if(status)status.textContent=value;}
+function render(){
+  feed.innerHTML='';
+  if(!messages.length){feed.appendChild(empty);return;}
+  messages.slice(-100).forEach(function(m){
+    const row=document.createElement('div');row.className='chat-message';
+    const avatar=document.createElement('div');avatar.className='chat-avatar';avatar.textContent=(m.name||'P').slice(0,1).toUpperCase();
+    const main=document.createElement('div');main.className='chat-msg-main';
+    const head=document.createElement('div');head.className='chat-msg-head';
+    const who=document.createElement('span');who.className='chat-msg-name';who.textContent=m.name;
+    const when=document.createElement('span');when.className='chat-msg-time';when.textContent=new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+    const body=document.createElement('p');body.className='chat-msg-text';body.textContent=m.message;
+    head.append(who,when);main.append(head,body);row.append(avatar,main);feed.appendChild(row);
+  });
+  feed.scrollTop=feed.scrollHeight;
+}
+async function loadMessages(){
+  const {data,error}=await supabase.from('chat_messages').select('id,name,message,created_at').order('created_at',{ascending:true}).limit(100);
+  if(error){setStatus('CHAT CONNECTION ERROR');console.error('Supabase chat load:',error);return;}
+  messages=data||[];render();setStatus('SHARED COMMUNITY CHAT');
+}
+form.addEventListener('submit',async function(e){
+  e.preventDefault();
+  const message=messageInput.value.trim();
+  const username=nameInput.value.trim().slice(0,20)||'Player';
+  if(!message)return;
+  const button=form.querySelector('button[type="submit"]');
+  button.disabled=true;setStatus('SENDING…');
+  const {data,error}=await supabase.from('chat_messages').insert({name:username,message}).select('id,name,message,created_at').single();
+  button.disabled=false;
+  if(error){setStatus('MESSAGE NOT SENT — TRY AGAIN');console.error('Supabase chat insert:',error);return;}
+  messageInput.value='';
+  if(!messages.some(m=>m.id===data.id)){messages.push(data);messages=messages.slice(-100);render();}
+  setStatus('SHARED COMMUNITY CHAT');messageInput.focus();
+});
+loadMessages();
+supabase.channel('jasmine-chat-room')
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},payload=>{
+    if(!messages.some(m=>m.id===payload.new.id)){messages.push(payload.new);messages=messages.slice(-100);render();}
+  })
+  .subscribe(state=>{if(state==='SUBSCRIBED')setStatus('SHARED COMMUNITY CHAT');});
 </script>
 
 </body></html>
