@@ -272,7 +272,7 @@
   function openGame(g, from) {
     if (cur === g) return;
     if (cur) closeGame(true);
-    cur = g; opener = from || opener; ov.hidden = false; doc.body.classList.add('playing'); if(window.__notifyParentGameState)window.__notifyParentGameState('mg-open');
+    cur = g; opener = from || opener; ov.hidden = false; doc.body.classList.add('playing'); parent.postMessage({type:'mg-open',height:document.documentElement.scrollHeight},'*');
     $('otitle').textContent = g.name; slabel.textContent = g.label || 'Score'; scoreEl.textContent = '0';
     var b = H.get(g.id); bestEl.textContent = b === null ? '-' : fmt(g, b);
     stage.innerHTML = ''; ctrl.innerHTML = ''; hintEl.textContent = g.hint || '';
@@ -285,7 +285,7 @@
     try { if (inst && inst.destroy) inst.destroy(); } catch (e) {}
     inst = null; cur = null; host = null; active = null; stage.innerHTML = ''; ctrl.innerHTML = '';
     ov.hidden = true; doc.body.classList.remove('playing');
-    if (!silent && window.__notifyParentGameState) window.__notifyParentGameState('mg-close');
+    if (!silent) parent.postMessage({type:'mg-close',height:document.documentElement.scrollHeight},'*');
     if (!silent && opener && opener.focus) opener.focus({ preventScroll: true });
   }
   H.open = function (g, from) { opener = from || null; if (location.hash.slice(1) !== g.id) location.hash = g.id; route(); };
