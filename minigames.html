@@ -1,6 +1,6 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Minigames</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gilda+Display&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
@@ -272,7 +272,7 @@
   function openGame(g, from) {
     if (cur === g) return;
     if (cur) closeGame(true);
-    cur = g; opener = from || opener; ov.hidden = false; doc.body.classList.add('playing');
+    cur = g; opener = from || opener; ov.hidden = false; doc.body.classList.add('playing'); if(window.__notifyParentGameState)window.__notifyParentGameState('mg-open');
     $('otitle').textContent = g.name; slabel.textContent = g.label || 'Score'; scoreEl.textContent = '0';
     var b = H.get(g.id); bestEl.textContent = b === null ? '-' : fmt(g, b);
     stage.innerHTML = ''; ctrl.innerHTML = ''; hintEl.textContent = g.hint || '';
@@ -285,6 +285,7 @@
     try { if (inst && inst.destroy) inst.destroy(); } catch (e) {}
     inst = null; cur = null; host = null; active = null; stage.innerHTML = ''; ctrl.innerHTML = '';
     ov.hidden = true; doc.body.classList.remove('playing');
+    if (!silent && window.__notifyParentGameState) window.__notifyParentGameState('mg-close');
     if (!silent && opener && opener.focus) opener.focus({ preventScroll: true });
   }
   H.open = function (g, from) { opener = from || null; if (location.hash.slice(1) !== g.id) location.hash = g.id; route(); };
@@ -1212,18 +1213,21 @@
 <script>
 (function(){
   var wasPlaying=document.body.classList.contains('playing');
-  function report(){
+  function report(forcedType){
     var playing=document.body.classList.contains('playing');
-    var type='mg-resize';
-    if(playing&&!wasPlaying) type='mg-open';
-    else if(!playing&&wasPlaying) type='mg-close';
+    var type=forcedType||'mg-resize';
+    if(!forcedType){
+      if(playing&&!wasPlaying) type='mg-open';
+      else if(!playing&&wasPlaying) type='mg-close';
+    }
     wasPlaying=playing;
     parent.postMessage({type:type,height:document.documentElement.scrollHeight},location.origin);
   }
-  window.addEventListener('load',report);
-  window.addEventListener('resize',report);
-  if(window.ResizeObserver){new ResizeObserver(function(){if(!document.body.classList.contains('playing'))report();}).observe(document.querySelector('.wrap'));}
-  new MutationObserver(report).observe(document.body,{attributes:true,attributeFilter:['class']});
+  window.__notifyParentGameState=function(type){report(type);};
+  window.addEventListener('load',function(){report('mg-resize');});
+  window.addEventListener('resize',function(){report('mg-resize');});
+  if(window.ResizeObserver){new ResizeObserver(function(){if(!document.body.classList.contains('playing'))report('mg-resize');}).observe(document.querySelector('.wrap'));}
+  new MutationObserver(function(){report();}).observe(document.body,{attributes:true,attributeFilter:['class']});
 })();
 </script>
 
