@@ -20,7 +20,7 @@
     color-scheme: dark;
   }
   *, *::before, *::after { box-sizing: border-box; }
-  html, body { height: 100%; }
+  html, body { height: auto; min-height: 100%; }
   body {
     margin: 0;
     background: var(--night);
@@ -31,9 +31,11 @@
     padding-block: 16px;
   }
   .app {
-    height: 100%;
+    min-height: calc(100vh - 32px);
+    height: auto;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 300px;
+    margin-bottom: 56px;
     gap: 32px;
   }
   .stage {
@@ -497,4 +499,99 @@
   if (!reduce) requestAnimationFrame(loop);
 })();
 </script>
+
+<style>
+  .site-section{max-width:1040px;margin:0 auto 56px;padding:0 0}
+  .site-section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:18px}
+  .site-kicker{font:400 .72rem/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--moss);margin:0 0 8px}
+  .site-section h2{font:400 clamp(2rem,5vw,3rem)/1 var(--display);margin:0;color:var(--petal)}
+  .site-sub{color:var(--mist);font-size:.88rem;margin:8px 0 0}
+  .games-frame{display:block;width:100%;height:1100px;border:1px solid var(--line);border-radius:8px;background:var(--night);overflow:hidden}
+  #gamesFrame.game-fullscreen{position:fixed;inset:0;width:100vw;height:100dvh!important;z-index:1000;border:0;border-radius:0;margin:0}
+  .chat-shell{border:1px solid var(--line);border-radius:8px;background:linear-gradient(145deg,#14251b,#0d1712);overflow:hidden}
+  .chat-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}
+  .chat-title{font:400 1.6rem/1.1 var(--display);margin:0}
+  .chat-meta{font:400 .68rem/1.2 var(--mono);letter-spacing:.12em;color:var(--moss);text-transform:uppercase;margin:6px 0 0}
+  .chat-feed{min-height:190px;max-height:360px;overflow:auto;padding:18px 20px;display:flex;flex-direction:column;gap:16px}
+  .chat-empty{color:var(--mist);text-align:center;margin:auto;padding:30px 10px;font-size:.9rem}
+  .chat-message{display:flex;gap:11px;align-items:flex-start}
+  .chat-avatar{width:34px;height:34px;flex:none;border-radius:5px;background:#294a35;color:var(--butter);display:grid;place-items:center;font:400 1rem var(--display)}
+  .chat-message:nth-child(2n) .chat-avatar{background:#5b4930;color:var(--petal)}
+  .chat-msg-main{min-width:0;flex:1}
+  .chat-msg-head{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .chat-msg-name{font-weight:600;color:var(--petal);font-size:.88rem}
+  .chat-msg-time{font:400 .65rem var(--mono);color:var(--mist)}
+  .chat-msg-text{margin:3px 0 0;color:#d7ddcf;font-size:.92rem;overflow-wrap:anywhere}
+  .chat-compose{padding:14px 16px 16px;border-top:1px solid var(--line);background:rgba(0,0,0,.12)}
+  .chat-compose-row{display:flex;gap:9px;margin-bottom:9px}
+  .chat-compose input{min-width:0;width:100%;background:#0a100e;color:var(--petal);border:1px solid var(--line);border-radius:5px;padding:12px 13px;font:400 .9rem var(--body);outline:none}
+  .chat-compose input:focus{border-color:var(--amber)}
+  .chat-compose input::placeholder{color:#78887b}
+  .chat-send{border:0;border-radius:5px;background:var(--amber);color:var(--night);padding:0 19px;font:600 .9rem var(--body);cursor:pointer}
+  .chat-send:hover{background:var(--butter)}
+  .chat-note{margin:10px 2px 0;color:var(--mist);font-size:.72rem}
+  @media(max-width:800px){.site-section{margin-bottom:42px}.site-section-head{align-items:flex-start;flex-direction:column}.games-frame{height:1450px}.chat-top{padding:15px}.chat-feed{padding:15px}.chat-compose-row{gap:7px}.chat-send{padding:0 14px}}
+</style>
+<section class="site-section" id="gamesSection">
+  <div class="site-section-head">
+    <div><p class="site-kicker">PLAY SOMETHING</p><h2>Minigames</h2><p class="site-sub">Twelve little games, right here on the page.</p></div>
+  </div>
+  <iframe class="games-frame" id="gamesFrame" src="minigames.html" title="Minigames collection" scrolling="no" loading="eager"></iframe>
+</section>
+<section class="site-section" id="communityChat">
+  <div class="site-section-head">
+    <div><p class="site-kicker">AFTER THE GAME</p><h2>Community chat</h2><p class="site-sub">Say hello, share a score, or find someone to play with.</p></div>
+  </div>
+  <div class="chat-shell">
+    <div class="chat-top"><div><h3 class="chat-title">The Minigames Lounge</h3><p class="chat-meta">COMMUNITY BOARD</p></div><span class="chat-meta">LOCAL PREVIEW</span></div>
+    <div class="chat-feed" id="chatFeed" aria-live="polite"><p class="chat-empty" id="chatEmpty">No messages yet. Start the conversation.</p></div>
+    <form class="chat-compose" id="chatForm">
+      <div class="chat-compose-row"><input id="chatName" maxlength="20" value="Player" aria-label="Your name" placeholder="Your name"></div>
+      <div class="chat-compose-row"><input id="chatInput" maxlength="500" autocomplete="off" aria-label="Message" placeholder="Write a message..." required><button class="chat-send" type="submit">Send</button></div>
+      <p class="chat-note">This preview saves messages in this browser only. Shared chat and accounts need the Supabase connection configured.</p>
+    </form>
+  </div>
+</section>
+<script>
+(function(){
+  var frame=document.getElementById('gamesFrame'),naturalHeight=1100;
+  window.addEventListener('message',function(e){
+    if(e.source!==frame.contentWindow||e.origin!==location.origin||!e.data)return;
+    if(e.data.type==='mg-open'){
+      frame.classList.add('game-fullscreen');document.body.style.overflow='hidden';
+    }else if(e.data.type==='mg-resize'){
+      naturalHeight=Math.max(700,Math.min(5000,Number(e.data.height)||1100));
+      if(!frame.classList.contains('game-fullscreen'))frame.style.height=naturalHeight+'px';
+    }else if(e.data.type==='mg-close'){
+      frame.classList.remove('game-fullscreen');frame.style.height=naturalHeight+'px';document.body.style.overflow='';
+    }
+  });
+  frame.addEventListener('load',function(){try{naturalHeight=Math.max(700,frame.contentDocument.documentElement.scrollHeight);frame.style.height=naturalHeight+'px';}catch(e){}});
+  var feed=document.getElementById('chatFeed'),empty=document.getElementById('chatEmpty'),form=document.getElementById('chatForm'),name=document.getElementById('chatName'),input=document.getElementById('chatInput');
+  var messages=[];try{messages=JSON.parse(localStorage.getItem('minigames-community-preview')||'[]');if(!Array.isArray(messages))messages=[];}catch(e){messages=[];}
+  function render(){
+    feed.innerHTML='';
+    if(!messages.length){feed.appendChild(empty);return;}
+    messages.slice(-100).forEach(function(m){
+      var row=document.createElement('div');row.className='chat-message';
+      var avatar=document.createElement('div');avatar.className='chat-avatar';avatar.textContent=(m.name||'P').slice(0,1).toUpperCase();
+      var main=document.createElement('div');main.className='chat-msg-main';
+      var head=document.createElement('div');head.className='chat-msg-head';
+      var who=document.createElement('span');who.className='chat-msg-name';who.textContent=m.name;
+      var when=document.createElement('span');when.className='chat-msg-time';when.textContent=m.time;
+      var body=document.createElement('p');body.className='chat-msg-text';body.textContent=m.text;
+      head.appendChild(who);head.appendChild(when);main.appendChild(head);main.appendChild(body);row.appendChild(avatar);row.appendChild(main);feed.appendChild(row);
+    });
+    feed.scrollTop=feed.scrollHeight;
+  }
+  form.addEventListener('submit',function(e){
+    e.preventDefault();var text=input.value.trim(),who=name.value.trim().slice(0,20)||'Player';if(!text)return;
+    var now=new Date();messages.push({name:who,text:text,time:now.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})});
+    messages=messages.slice(-100);try{localStorage.setItem('minigames-community-preview',JSON.stringify(messages));}catch(e){}
+    input.value='';render();input.focus();
+  });
+  render();
+})();
+</script>
+
 </body></html>
