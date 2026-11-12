@@ -132,7 +132,7 @@
 
 <section class="overlay" id="overlay" hidden aria-label="Game">
   <div class="ohead">
-    <button type="button" class="back" id="back" aria-label="Back to all games"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4L6.5 10l6 6"/></svg><span>Games</span></button>
+    <button type="button" class="back" id="back" aria-label="Back to all games"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4L6.5 10l6 6"/></svg><span>Back to Jasmine</span></button>
     <h2 class="otitle" id="otitle"></h2>
     <div class="scores">
       <div><small id="slabel">Score</small><b id="score">0</b></div>
@@ -289,7 +289,7 @@
     if (!silent && opener && opener.focus) opener.focus({ preventScroll: true });
   }
   H.open = function (g, from) { opener = from || null; if (location.hash.slice(1) !== g.id) location.hash = g.id; route(); };
-  H.close = function () { if (location.hash) location.hash = ''; route(); };
+  H.close = function () { if (location.hash) location.hash = ''; route(); parent.postMessage({type:'mg-close',height:document.documentElement.scrollHeight},'*'); };
   function route() {
     var g = H.byId[location.hash.slice(1)];
     if (g) openGame(g); else closeGame();
