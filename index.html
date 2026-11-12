@@ -564,7 +564,7 @@
       if(!frame.classList.contains('game-fullscreen'))frame.style.height=naturalHeight+'px';
     }else if(e.data.type==='mg-close'){
       frame.classList.remove('game-fullscreen');frame.style.height=naturalHeight+'px';document.body.style.overflow='';
-      var chat=document.getElementById('communityChat');if(chat)window.setTimeout(function(){chat.scrollIntoView({behavior:'smooth',block:'start'});},120);
+      window.setTimeout(function(){window.scrollTo({top:0,behavior:'smooth'});},120);
     }
   });
   frame.addEventListener('load',function(){try{naturalHeight=Math.max(700,frame.contentDocument.documentElement.scrollHeight);frame.style.height=naturalHeight+'px';}catch(e){}});
