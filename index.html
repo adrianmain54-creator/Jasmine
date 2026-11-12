@@ -506,8 +506,8 @@
   .site-kicker{font:400 .72rem/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--moss);margin:0 0 8px}
   .site-section h2{font:400 clamp(2rem,5vw,3rem)/1 var(--display);margin:0;color:var(--petal)}
   .site-sub{color:var(--mist);font-size:.88rem;margin:8px 0 0}
-  .games-frame{display:block;width:100%;height:1100px;border:1px solid var(--line);border-radius:8px;background:var(--night);overflow:hidden}
-  #gamesFrame.game-fullscreen{position:fixed;inset:0;width:100vw;height:100dvh!important;z-index:1000;border:0;border-radius:0;margin:0}
+  .games-frame{display:block;width:100%;height:1450px;border:1px solid var(--line);border-radius:8px;background:var(--night);overflow:hidden}
+  /* Keep the games inside the normal Jasmine page; never cover the flower or chat with a fullscreen iframe. */
   .chat-shell{border:1px solid var(--line);border-radius:8px;background:linear-gradient(145deg,#14251b,#0d1712);overflow:hidden}
   .chat-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}
   .chat-title{font:400 1.6rem/1.1 var(--display);margin:0}
@@ -554,17 +554,15 @@
 </section>
 <script>
 (function(){
-  var frame=document.getElementById('gamesFrame'),naturalHeight=1100;
+  var frame=document.getElementById('gamesFrame'),naturalHeight=1450;
   window.addEventListener('message',function(e){
     if(e.source!==frame.contentWindow||!e.data)return;
-    if(e.data.type==='mg-open'){
-      frame.classList.add('game-fullscreen');document.body.style.overflow='hidden';
-    }else if(e.data.type==='mg-resize'){
-      naturalHeight=Math.max(700,Math.min(5000,Number(e.data.height)||1100));
-      if(!frame.classList.contains('game-fullscreen'))frame.style.height=naturalHeight+'px';
+    if(e.data.type==='mg-resize'){
+      naturalHeight=Math.max(700,Math.min(5000,Number(e.data.height)||1450));
+      frame.style.height=naturalHeight+'px';
     }else if(e.data.type==='mg-close'){
-      frame.classList.remove('game-fullscreen');frame.style.height=naturalHeight+'px';document.body.style.overflow='';
-      window.setTimeout(function(){window.scrollTo({top:0,behavior:'smooth'});},120);
+      /* The game closes inside the embedded games panel. The rest of Jasmine stays in place. */
+      document.body.style.overflow='';
     }
   });
   frame.addEventListener('load',function(){try{naturalHeight=Math.max(700,frame.contentDocument.documentElement.scrollHeight);frame.style.height=naturalHeight+'px';}catch(e){}});
