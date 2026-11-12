@@ -1211,9 +1211,14 @@
 
 <script>
 (function(){
+  var wasPlaying=document.body.classList.contains('playing');
   function report(){
     var playing=document.body.classList.contains('playing');
-    parent.postMessage({type:playing?'mg-open':'mg-resize',height:document.documentElement.scrollHeight},location.origin);
+    var type='mg-resize';
+    if(playing&&!wasPlaying) type='mg-open';
+    else if(!playing&&wasPlaying) type='mg-close';
+    wasPlaying=playing;
+    parent.postMessage({type:type,height:document.documentElement.scrollHeight},location.origin);
   }
   window.addEventListener('load',report);
   window.addEventListener('resize',report);
