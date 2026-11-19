@@ -122,7 +122,7 @@
       <h1>Minigames</h1>
     </div>
     <div class="top-right">
-      <p id="count">Fifteen quick games. Best scores stay on this device.</p>
+      <p id="count">Eighteen quick games. Best scores stay on this device.</p>
       <button type="button" class="shuffle" id="shuffle">Play something random</button>
     </div>
   </header>
@@ -1279,11 +1279,49 @@
   });
 })();
 </script>
+
+<script id="jasmine-extra-games">
+(function(){
+ 'use strict';var H=window.MG,el=H.el;
+ /* Dewdrop Dash — tap each drifting drop before it fades. */
+ H.register({id:'dewdrop',name:'Dewdrop Dash',label:'Drops',ratio:1,bg:'#b9d1c0',ink:'#102018',chip:'rgba(16,32,24,.12)',hint:'Tap the glowing dew drops. You have 30 seconds — quick fingers!',art:'<svg viewBox="0 0 100 100"><path d="M50 8C38 29 24 45 24 63a26 26 0 0 0 52 0C76 45 62 29 50 8Z" fill="#dfeee1"/><circle cx="43" cy="55" r="5" fill="#fff"/><path d="M38 75q12 8 24-1" fill="none" stroke="#7f9a68" stroke-width="4" stroke-linecap="round"/></svg>',mount:function(host,api){
+  var W=420,Hh=420,g=H.canvas(host,W,Hh),ctx=g.ctx,cv=g.cv,targets=[],score=0,time=30,elapsed=0,spawn=0,done=false,fx=H.sparks();
+  function add(){targets.push({x:34+Math.random()*(W-68),y:52+Math.random()*(Hh-104),r:17+Math.random()*9,t:2.2,p:Math.random()*6});}
+  function finish(){if(done)return;done=true;var nb=api.submit(score);api.over({title:score+' drops caught',sub:'The morning dew has settled.',badge:nb&&score?'New best':''},reset);}
+  function reset(){api.clear();targets=[];score=0;time=30;elapsed=0;spawn=0;done=false;fx.clear();api.score(0);api.hint('Tap the drops before they disappear.');add();add();}
+  function update(dt){if(done)return;elapsed+=dt;time=Math.max(0,30-elapsed);spawn-=dt;fx.update(dt);if(spawn<=0&&targets.length<5){add();spawn=.48+Math.random()*.35;}targets.forEach(t=>t.t-=dt);targets=targets.filter(t=>t.t>0);if(time<=0)finish();}
+  function render(){ctx.fillStyle='#10251a';ctx.fillRect(0,0,W,Hh);for(var i=0;i<8;i++){ctx.strokeStyle='rgba(190,220,190,.07)';ctx.beginPath();ctx.arc(W/2,Hh/2,35+i*28,0,6.283);ctx.stroke();}targets.forEach(t=>{var pulse=1+Math.sin(elapsed*5+t.p)*.08;ctx.save();ctx.translate(t.x,t.y);ctx.scale(pulse,pulse);ctx.fillStyle='rgba(190,226,204,.12)';ctx.beginPath();ctx.arc(0,0,t.r*1.7,0,6.283);ctx.fill();ctx.fillStyle='#dfeee1';ctx.beginPath();ctx.moveTo(0,-t.r*1.3);ctx.bezierCurveTo(t.r,-t.r*.2,t.r,t.r,0,t.r);ctx.bezierCurveTo(-t.r,t.r,-t.r,-t.r*.2,0,-t.r*1.3);ctx.fill();ctx.fillStyle='rgba(255,255,255,.8)';ctx.beginPath();ctx.arc(-t.r*.25,-t.r*.15,t.r*.18,0,6.283);ctx.fill();ctx.restore();});ctx.fillStyle='#dba847';ctx.font='600 20px Hanken Grotesk';ctx.textAlign='left';ctx.fillText(Math.ceil(time)+'s',18,30);fx.draw(ctx);}
+  function tap(e){if(done)return;var p=cv.pos(e),best=-1,dist=1e9;targets.forEach((t,i)=>{var d=Math.hypot(t.x-p.x,t.y-p.y);if(d<t.r*1.7&&d<dist){best=i;dist=d;}});if(best>=0){var t=targets.splice(best,1)[0];score++;api.score(score);fx.burst(t.x,t.y,10,['#dfeee1','#dba847','#7f9a68'],90,.45);}}
+  cv.addEventListener('pointerdown',tap);var loop=H.loop(update,render);reset();return{destroy:function(){done=true;loop.stop();cv.removeEventListener('pointerdown',tap);}};
+ }});
+ /* Firefly Recall — repeat the glowing sequence. */
+ H.register({id:'firefly',name:'Firefly Recall',label:'Rounds',ratio:1,bg:'#d8c58d',ink:'#17251a',chip:'rgba(23,37,26,.12)',hint:'Watch the fireflies, then repeat their pattern.',art:'<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="29" fill="#dba847" opacity=".22"/><circle cx="50" cy="50" r="15" fill="#efe3b0"/><path d="M38 39q-18-18-25 1 13 12 25 4M62 39q18-18 25 1-13 12-25 4" fill="#f3eee2"/></svg>',mount:function(host,api){
+  var wrap=el('div','firefly-grid');wrap.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,390px);aspect-ratio:1;';host.appendChild(wrap);
+  var colors=['#dba847','#7f9a68','#b9c9d5','#d6a18c'],seq=[],input=[],round=0,showing=false,dead=false,timers=[],buttons=[];
+  function later(fn,ms){var id=setTimeout(fn,ms);timers.push(id);return id;}
+  function clearTimers(){timers.forEach(clearTimeout);timers=[];}
+  function flash(i){buttons[i].style.filter='brightness(1.8)';buttons[i].style.transform='scale(.96)';later(function(){if(buttons[i]){buttons[i].style.filter='';buttons[i].style.transform='';}},260);}
+  function play(){showing=true;input=[];api.hint('Watch the sequence…');seq.forEach(function(v,i){later(function(){if(!dead)flash(v);},500+i*620);});later(function(){showing=false;api.hint('Your turn — repeat the pattern.');},500+seq.length*620);}
+  function next(){round++;api.score(round);seq.push(H.rint(4));play();}
+  function reset(){api.clear();clearTimers();seq=[];input=[];round=0;dead=false;api.score(0);next();}
+  function choose(i){if(dead||showing)return;flash(i);if(seq[input.length]!==i){dead=true;var nb=api.submit(round);api.over({title:'Round '+round,sub:'One firefly got away.',badge:nb&&round?'New best':''},reset);return;}input.push(i);if(input.length===seq.length)later(next,520);}
+  colors.forEach(function(c,i){var b=el('button');b.type='button';b.setAttribute('aria-label','Firefly '+(i+1));b.style.cssText='border:1px solid rgba(255,255,255,.2);border-radius:10px;background:'+c+';box-shadow:inset 0 0 35px rgba(255,255,255,.12),0 10px 24px rgba(0,0,0,.18);touch-action:manipulation;transition:filter .16s,transform .16s;';b.addEventListener('click',function(){choose(i);});wrap.appendChild(b);buttons.push(b);});reset();return{destroy:function(){dead=true;clearTimers();}};
+ }});
+ /* Leaf Logic — clear the board by toggling a cell and its neighbors. */
+ H.register({id:'leaflogic',name:'Leaf Logic',label:'Moves',low:true,ratio:1,bg:'#c4d3b7',ink:'#15231a',chip:'rgba(21,35,26,.12)',hint:'Turn every leaf dark. Each tap flips that leaf and its neighbors.',art:'<svg viewBox="0 0 100 100"><g fill="#1f4a35"><rect x="13" y="13" width="27" height="27" rx="5"/><rect x="60" y="13" width="27" height="27" rx="5"/><rect x="13" y="60" width="27" height="27" rx="5"/></g><rect x="60" y="60" width="27" height="27" rx="5" fill="#dba847"/></svg>',mount:function(host,api){
+  var N=5,grid=el('div','leaflogic-grid');grid.style.cssText='display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;width:min(100%,410px);aspect-ratio:1;';host.appendChild(grid);var cells=[],board=[],moves=0,done=false;
+  function paint(){cells.forEach(function(b,i){var on=board[i];b.style.background=on?'#dba847':'#1d3b2c';b.style.boxShadow=on?'0 0 18px rgba(219,168,71,.22),inset 0 1px rgba(255,255,255,.25)':'inset 0 1px rgba(255,255,255,.08)';b.setAttribute('aria-pressed',String(on));});}
+  function flip(i){var r=Math.floor(i/N),c=i%N;[[r,c],[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(function(p){if(p[0]>=0&&p[0]<N&&p[1]>=0&&p[1]<N){var k=p[0]*N+p[1];board[k]=!board[k];}});}
+  function reset(){api.clear();done=false;moves=0;board=Array.from({length:N*N},function(){return false;});for(var j=0;j<14;j++)flip(H.rint(N*N));api.score(0);api.hint('Switch all 25 leaves off in as few moves as possible.');paint();}
+  cells=Array.from({length:N*N},function(_,i){var b=el('button');b.type='button';b.setAttribute('aria-label','Leaf '+(i+1));b.style.cssText='border:0;border-radius:7px;min-width:0;min-height:0;touch-action:manipulation;transition:background .12s,transform .12s;';b.addEventListener('click',function(){if(done)return;flip(i);moves++;api.score(moves);paint();if(board.every(function(v){return !v;})){done=true;var nb=api.submit(moves);api.over({title:'Garden restored',sub:moves+' moves',badge:nb?'New best':''},reset);}});grid.appendChild(b);return b;});reset();return{destroy:function(){done=true;}};
+ }});
+})();
+</script>
 <script>
 (function () {
   'use strict';
   var H = window.MG, grid = H.$('grid'), tiles = {};
-  var ORDER = ['pairs', 'snake', '2048', 'pattern', 'noughts', 'reflex', 'whack', 'breakout', 'sweeper', 'lightsout', 'flap', 'blocks', 'petalcatch', 'vinedash', 'gardenmatch'];
+  var ORDER = ['pairs', 'snake', '2048', 'pattern', 'noughts', 'reflex', 'whack', 'breakout', 'sweeper', 'lightsout', 'flap', 'blocks', 'petalcatch', 'vinedash', 'gardenmatch', 'dewdrop', 'firefly', 'leaflogic'];
   var list = ORDER.map(function (id) { return H.byId[id]; }).filter(Boolean);
 
   function refresh(g) { var b = tiles[g.id].querySelector('.best'); var v = H.fmtBest(g); b.textContent = v ? 'Best ' + v : ''; }
