@@ -554,7 +554,8 @@
   <div class="site-section-head">
     <div><p class="site-kicker">PLAY SOMETHING</p><h2>Minigames</h2><p class="site-sub">Twelve little games, right here on the page.</p></div>
   </div>
-  <iframe class="games-frame" id="gamesFrame" src="./minigames.html" title="Minigames collection" scrolling="no" loading="lazy"></iframe>
+  <iframe class="games-frame" id="gamesFrame" src="./minigames.html?v=3" title="Jasmine minigames" scrolling="no" loading="eager"></iframe>
+  <p class="games-fallback"><span>Games not appearing?</span> <a href="./minigames.html?v=3" target="_blank" rel="noopener">Open the game garden directly ↗</a></p>
 </section>
 <section class="site-section" id="communityChat">
   <div class="site-section-head">
@@ -1126,6 +1127,65 @@ const {data:{session}}=await supabase.auth.getSession();if(session?.user)showMem
 @media(max-width:760px){.social-app{grid-template-columns:minmax(0,1fr);min-height:0}.social-sidebar{border-right:0;border-bottom:1px solid rgba(218,230,207,.14)}.social-list{max-height:190px;min-height:60px}.social-search{margin-top:0}.social-conversation{min-height:560px}.conversation-feed{min-height:340px;max-height:55svh}.social-welcome{min-height:360px;padding:28px}.social-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.social-tab{font-size:.72rem}.people-results{max-height:130px}}
 @media(prefers-reduced-motion:reduce){.social-app *{scroll-behavior:auto!important;transition:none!important}}
 </style>
+
+<style id="jasmine-bloom-finish">
+  /* A more confident, editorial finish across the whole experience. */
+  html { scroll-behavior:smooth; }
+  body { background:radial-gradient(ellipse at 50% -12%,rgba(91,123,76,.2),transparent 44rem),#080e0b; }
+  .app { width:min(100%,1540px);margin-inline:auto; }
+  .site-section { position:relative; }
+  .site-section-head { align-items:flex-end;gap:22px;padding:0 0 20px;border-bottom:1px solid rgba(218,230,207,.17); }
+  .site-section-head>div { max-width:720px; }
+  .site-section h2 { font-size:clamp(2.7rem,6vw,4.6rem);letter-spacing:-.055em; }
+  .site-sub { max-width:52ch;line-height:1.7; }
+  .games-frame { display:block;width:100%;height:1120px;min-height:900px;border:1px solid rgba(218,230,207,.18);border-radius:4px;background:#090f0c;box-shadow:0 28px 90px rgba(0,0,0,.32); }
+  .games-fallback { display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:12px 2px 0;color:var(--mist);font-size:.78rem; }
+  .games-fallback a { color:#dfe5d4;text-decoration-thickness:1px;text-underline-offset:4px; }
+  .games-fallback a:hover { color:var(--amber); }
+  .site-section-head .site-kicker { margin-bottom:13px; }
+  .chat-auth,.chat-shell { box-shadow:0 28px 90px rgba(0,0,0,.28); }
+  .chat-auth { border:1px solid rgba(218,230,207,.18); }
+  .auth-submit,.chat-send { transition:transform .18s ease,background .18s ease,box-shadow .18s ease; }
+  .auth-submit:hover,.chat-send:hover { transform:translateY(-1px);box-shadow:0 8px 24px rgba(215,173,105,.13); }
+  button:focus-visible,a:focus-visible,input:focus-visible { outline:2px solid #d7ad69!important;outline-offset:3px; }
+  @media(max-width:800px) {
+    body { padding-inline:max(14px,env(safe-area-inset-left,0px)); }
+    .app { gap:18px; }
+    .site-section { margin-bottom:58px; }
+    .site-section h2 { font-size:clamp(2.6rem,12vw,3.8rem); }
+    .games-frame { height:1420px;min-height:1100px; }
+    .games-fallback { padding:0 2px; }
+  }
+  @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+</style>
+<script id="jasmine-game-embed-fix">
+(function(){
+  var frame=document.getElementById('gamesFrame');
+  if(!frame)return;
+  function fit(height){
+    var h=Number(height);
+    if(!Number.isFinite(h)||h<400)return;
+    frame.style.height=Math.max(900,Math.min(2600,Math.ceil(h+24)))+'px';
+  }
+  frame.addEventListener('load',function(){
+    frame.dataset.loaded='true';
+    try{
+      var doc=frame.contentDocument;
+      if(doc){
+        var grid=doc.getElementById('grid');
+        if(grid&&grid.children.length)fit(doc.documentElement.scrollHeight);
+        else frame.dataset.loaded='empty';
+      }
+    }catch(e){}
+  });
+  window.addEventListener('message',function(event){
+    if(event.source!==frame.contentWindow||event.origin!==location.origin)return;
+    var data=event.data;
+    if(data&&/^mg-(resize|open|close)$/.test(data.type))fit(data.height);
+  });
+})();
+</script>
+
 </body></html>
 
 <style id="jasmine-editorial-upgrade">
