@@ -438,12 +438,21 @@
     py += (ty - py) * (1 - Math.exp(-dt * 4));
     windAmp = reduce ? 0 : 0.05 + state.wind * 0.055 + gust * 0.35;
   }
+  var stageVisible = true, pageVisible = !document.hidden, lastPaint = 0;
+  if ('IntersectionObserver' in window) {
+    stageVisible = false;
+    new IntersectionObserver(function (entries) {
+      stageVisible = !!(entries[0] && entries[0].isIntersecting);
+    }, { rootMargin: '120px' }).observe(stage);
+  }
+  document.addEventListener('visibilitychange', function () { pageVisible = !document.hidden; });
   function loop(now) {
-    var dt = Math.min(0.05, (now - last) / 1000); last = now;
+    requestAnimationFrame(loop);
+    if (!pageVisible || !stageVisible || now - lastPaint < 33) return;
+    var dt = Math.min(0.05, (now - last) / 1000); last = now; lastPaint = now;
     step(dt);
     render(now / 1000);
     updateReadout();
-    requestAnimationFrame(loop);
   }
   function drawOnce() {
     step(1);
@@ -452,7 +461,7 @@
   }
   function resize() {
     var r = stage.getBoundingClientRect();
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, window.matchMedia && window.matchMedia('(pointer: coarse)').matches ? 1.35 : 1.75);
     W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
     U = Math.min(W, H);
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
@@ -536,7 +545,7 @@
   <div class="site-section-head">
     <div><p class="site-kicker">PLAY SOMETHING</p><h2>Minigames</h2><p class="site-sub">Twelve little games, right here on the page.</p></div>
   </div>
-  <iframe class="games-frame" id="gamesFrame" src="minigames.html" title="Minigames collection" scrolling="no" loading="eager"></iframe>
+  <iframe class="games-frame" id="gamesFrame" src="minigames.html" title="Minigames collection" scrolling="no" loading="lazy"></iframe>
 </section>
 <section class="site-section" id="communityChat">
   <div class="site-section-head">
