@@ -438,7 +438,7 @@
     py += (ty - py) * (1 - Math.exp(-dt * 4));
     windAmp = reduce ? 0 : 0.05 + state.wind * 0.055 + gust * 0.35;
   }
-  var stageVisible = true, pageVisible = !document.hidden, lastPaint = 0;
+  var stageVisible = true, pageVisible = !document.hidden;
   if ('IntersectionObserver' in window) {
     stageVisible = false;
     new IntersectionObserver(function (entries) {
@@ -448,8 +448,8 @@
   document.addEventListener('visibilitychange', function () { pageVisible = !document.hidden; });
   function loop(now) {
     requestAnimationFrame(loop);
-    if (!pageVisible || !stageVisible || now - lastPaint < 33) return;
-    var dt = Math.min(0.05, (now - last) / 1000); last = now; lastPaint = now;
+    if (!pageVisible || !stageVisible) return;
+    var dt = Math.min(0.05, (now - last) / 1000); last = now;
     step(dt);
     render(now / 1000);
     updateReadout();
@@ -461,7 +461,7 @@
   }
   function resize() {
     var r = stage.getBoundingClientRect();
-    dpr = Math.min(window.devicePixelRatio || 1, window.matchMedia && window.matchMedia('(pointer: coarse)').matches ? 1.35 : 1.75);
+    dpr = Math.min(window.devicePixelRatio || 1, window.matchMedia && window.matchMedia('(pointer: coarse)').matches ? 1.75 : 2);
     W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
     U = Math.min(W, H);
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
@@ -969,4 +969,130 @@ if(session?.user)showMember(session.user);else showGuest();
   .auth-tab:focus-visible,.auth-submit:focus-visible,.chat-signout:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
   @media(max-width:700px){.chat-auth{grid-template-columns:1fr;gap:28px;padding:24px 20px}.chat-auth-mark{margin-bottom:16px}.chat-auth-copy h3{max-width:15ch}.chat-account-label{font-size:.58rem}}
 </style>
+
+<style id="jasmine-visual-redesign">
+  /* A more deliberate greenhouse interface: stronger hierarchy, softer surfaces, clearer controls. */
+  :root {
+    --glass:rgba(20,34,25,.78);
+    --glass-line:rgba(225,236,216,.15);
+    --soft-glow:rgba(154,184,132,.12);
+  }
+  body {
+    background:
+      radial-gradient(ellipse at 12% 8%,rgba(83,121,78,.2),transparent 34rem),
+      radial-gradient(ellipse at 88% 48%,rgba(173,139,83,.07),transparent 30rem),
+      #080e0b;
+  }
+  .app {
+    gap:clamp(24px,3.2vw,48px);
+    max-width:1500px;
+  }
+  .stage {
+    min-height:650px;
+    border-radius:18px;
+    border:1px solid rgba(225,236,216,.2);
+    box-shadow:0 32px 90px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.035);
+    background:
+      radial-gradient(ellipse at 52% 44%,rgba(71,105,69,.14),transparent 48%),
+      #0b1510;
+  }
+  .stage::before {
+    content:"NIGHT GARDEN  /  NO. 01";
+    position:absolute;z-index:3;top:26px;left:28px;
+    color:rgba(232,237,220,.62);
+    font:500 .62rem/1 var(--mono);letter-spacing:.16em;
+    pointer-events:none;
+  }
+  .stage::after {
+    height:58%;
+    background:linear-gradient(0deg,rgba(5,11,7,.96),rgba(5,11,7,.35) 54%,transparent);
+  }
+  .title h1 {text-shadow:0 8px 40px rgba(0,0,0,.35);}
+  .title p {max-width:30ch;color:rgba(244,240,230,.78);}
+  .readout {
+    padding:14px 17px;
+    border:1px solid rgba(225,236,216,.16);
+    border-radius:12px;
+    background:rgba(8,16,11,.42);
+    backdrop-filter:blur(14px);
+  }
+  .panel {
+    align-self:center;
+    width:100%;
+    padding:clamp(22px,2.5vw,34px);
+    gap:25px;
+    border:1px solid var(--glass-line);
+    border-radius:18px;
+    background:linear-gradient(155deg,rgba(25,43,30,.88),rgba(11,20,14,.92));
+    box-shadow:0 26px 70px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.035);
+  }
+  .panel h2 {
+    display:flex;align-items:center;gap:12px;
+    font-size:1.7rem;padding-bottom:18px;
+  }
+  .panel h2::before {
+    content:"";width:7px;height:7px;flex:0 0 7px;border-radius:50%;
+    background:#c4d2a5;box-shadow:0 0 14px rgba(196,210,165,.65);
+  }
+  .ctl {
+    padding:15px 0 0;
+    border-top:1px solid rgba(225,236,216,.09);
+  }
+  .ctl label,.ctl legend {letter-spacing:.005em;}
+  .ctl output {padding:5px 8px;border-radius:6px;background:rgba(215,173,105,.1);}
+  input[type=range]::-webkit-slider-thumb {transition:box-shadow .18s,transform .18s;}
+  input[type=range]:active::-webkit-slider-thumb {transform:scale(1.14);box-shadow:0 0 0 5px rgba(215,173,105,.15);}
+  .seg label {
+    border-radius:8px!important;
+    background:rgba(255,255,255,.025);
+  }
+  .seg input:checked + label {box-shadow:0 5px 18px rgba(0,0,0,.18);}
+  .shuffle {
+    border-radius:10px;
+    background:linear-gradient(115deg,rgba(215,173,105,.13),rgba(215,173,105,.035));
+    border-color:rgba(215,173,105,.48);
+  }
+  .shuffle:hover {background:#e6e6d7;transform:translateY(-2px);}
+  .foot {font-size:.76rem;}
+  .site-section-head {display:flex;flex-direction:column;gap:8px;}
+  .site-kicker {display:inline-flex;align-items:center;gap:10px;}
+  .site-kicker::before {content:"";width:22px;height:1px;background:var(--amber);}
+  .site-section h2 {line-height:1.04;}
+  .games-frame {
+    border-radius:16px;
+    border-color:rgba(225,236,216,.18);
+    box-shadow:0 30px 80px rgba(0,0,0,.25);
+  }
+  .chat-shell {
+    overflow:hidden;
+    border-radius:16px;
+    background:linear-gradient(145deg,rgba(23,40,29,.96),rgba(9,17,12,.98));
+    box-shadow:0 30px 80px rgba(0,0,0,.22);
+  }
+  .chat-auth {border-radius:16px;box-shadow:0 26px 70px rgba(0,0,0,.2);}
+  .chat-auth-mark {border-radius:14px;background:rgba(215,173,105,.08);}
+  .chat-auth-form {padding:clamp(16px,2vw,24px);border:1px solid rgba(225,236,216,.1);border-radius:12px;background:rgba(4,11,7,.2);}
+  .auth-field input {border-radius:9px;}
+  .auth-submit,.chat-signout {border-radius:9px;}
+  .chat-compose input {border-radius:9px;}
+  .chat-send {border-radius:9px;}
+  @media(max-width:800px) {
+    .stage {min-height:460px;height:min(70svh,660px);border-radius:15px;}
+    .stage::before {top:20px;left:19px;font-size:.56rem;}
+    .readout {top:14px;right:14px;padding:10px 12px;}
+    .panel {padding:22px 20px;border-radius:15px;gap:20px;}
+    .panel h2 {font-size:1.5rem;}
+    .site-section h2 {font-size:clamp(2.3rem,10vw,3.4rem);}
+    .chat-auth {border-radius:14px;}
+    .games-frame {border-radius:12px;}
+  }
+  @media(max-width:390px) {
+    .panel {padding:20px 16px;}
+    .stage {min-height:420px;}
+  }
+  @media(prefers-reduced-motion:reduce) {
+    .shuffle,.seg label,input[type=range]::-webkit-slider-thumb {transition:none!important;}
+  }
+</style>
+
 </body></html>
