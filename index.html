@@ -614,7 +614,7 @@ const supabase=createClient('https://jkossymjujldzsmxyutq.supabase.co','sb_publi
 const $=id=>document.getElementById(id);
 const authBox=$('chatAuth'),memberArea=$('chatMemberArea'),authForm=$('authForm');
 const authFeedback=$('authFeedback'),authSubmit=$('authSubmit'),nameField=$('authNameField'),nameInput=$('authName'),emailInput=$('authEmail'),passwordInput=$('authPassword');
-let mode='login',currentUser=null,busy=false,activeView='chats',friends=[],requests=[],conversations=[],activeConversationId=null,messageChannel=null,globalChannel=null,profiles=new Map();
+let mode='login',currentUser=null,busy=false,activeView='chats',friends=[],requests=[],conversations=[],activeConversationId=null,messageChannel=null,globalChannel=null,profiles=new Map(),socialLoadSeq=0,messageLoadSeq=0,searchTimer=null,searchSeq=0;
 const safeName=user=>user?.display_name||'Jasmine member';
 function feedback(message,error=false){authFeedback.textContent=message;authFeedback.classList.toggle('error',error);}
 function displayName(){return currentUser?.user_metadata?.username||currentUser?.user_metadata?.display_name||currentUser?.email?.split('@')[0]||'Jasmine member';}
@@ -642,33 +642,38 @@ function renderList(){
 }
 async function loadSocial(){
  if(!currentUser)return;
- const [profileRes,friendRes,requestRes,memberRes]=await Promise.all([
-  supabase.from('profiles').select('id,display_name').limit(500),
-  supabase.from('friendships').select('user_a,user_b').or('user_a.eq.'+currentUser.id+',user_b.eq.'+currentUser.id),
-  supabase.from('friend_requests').select('id,sender_id,receiver_id,status,created_at').or('sender_id.eq.'+currentUser.id+',receiver_id.eq.'+currentUser.id).order('created_at',{ascending:false}),
-  supabase.from('conversation_members').select('conversation_id').eq('user_id',currentUser.id)
+ const uid=currentUser.id,seq=++socialLoadSeq;
+ const [friendRes,requestRes,memberRes]=await Promise.all([
+  supabase.from('friendships').select('user_a,user_b').or('user_a.eq.'+uid+',user_b.eq.'+uid),
+  supabase.from('friend_requests').select('id,sender_id,receiver_id,status,created_at').or('sender_id.eq.'+uid+',receiver_id.eq.'+uid).order('created_at',{ascending:false}),
+  supabase.from('conversation_members').select('conversation_id').eq('user_id',uid)
  ]);
- for(const p of profileRes.data||[])profiles.set(p.id,p);
- if(profileRes.error||friendRes.error||requestRes.error||memberRes.error){console.error('Jasmine social load',profileRes.error||friendRes.error||requestRes.error||memberRes.error);return;}
- const ids=(friendRes.data||[]).map(f=>f.user_a===currentUser.id?f.user_b:f.user_a);
- friends=ids.map(id=>profiles.get(id)).filter(Boolean);
- requests=requestRes.data||[];
- $('requestCount').textContent=String(requests.filter(r=>r.receiver_id===currentUser.id&&r.status==='pending').length);
- const convIds=(memberRes.data||[]).map(m=>m.conversation_id);
- conversations=[];
+ if(seq!==socialLoadSeq||currentUser?.id!==uid)return;
+ if(friendRes.error||requestRes.error||memberRes.error){console.error('Jasmine social load',friendRes.error||requestRes.error||memberRes.error);$('socialList').replaceChildren(el('p','social-empty','Could not load your chats. Check your connection and try again.'));return;}
+ const ids=(friendRes.data||[]).map(f=>f.user_a===uid?f.user_b:f.user_a),convIds=(memberRes.data||[]).map(m=>m.conversation_id);
+ requests=requestRes.data||[];let cs=[],members=[];
  if(convIds.length){
-  const {data:cs,error}=await supabase.from('conversations').select('id,title,is_group,created_at').in('id',convIds).order('created_at',{ascending:false});
-  if(!error){
-   const {data:members}=await supabase.from('conversation_members').select('conversation_id,user_id').in('conversation_id',convIds);
-   conversations=(cs||[]).map(c=>{const roster=(members||[]).filter(m=>m.conversation_id===c.id);const others=roster.filter(m=>m.user_id!==currentUser.id).map(m=>profiles.get(m.user_id)).filter(Boolean);return {...c,roster,displayTitle:c.is_group?c.title:(others[0]?safeName(others[0]):'Private chat')};});
-  }
+  const [cr,mr]=await Promise.all([supabase.from('conversations').select('id,title,is_group,created_at').in('id',convIds).order('created_at',{ascending:false}),supabase.from('conversation_members').select('conversation_id,user_id').in('conversation_id',convIds)]);
+  if(seq!==socialLoadSeq||currentUser?.id!==uid)return;
+  if(cr.error||mr.error){console.error('Jasmine conversation load',cr.error||mr.error);$('socialList').replaceChildren(el('p','social-empty','Could not load conversations.'));return;}
+  cs=cr.data||[];members=mr.data||[];
  }
- $('chatCount').textContent=String(conversations.length);renderList();
- if(activeConversationId&&!conversations.some(c=>c.id===activeConversationId)){activeConversationId=null;$('activeConversation').hidden=true;$('socialWelcome').hidden=false;}
+ const profileIds=[...new Set([...ids,...requests.flatMap(r=>[r.sender_id,r.receiver_id]),...members.map(m=>m.user_id)])];profiles=new Map();
+ if(profileIds.length){
+  const {data:ps,error}=await supabase.from('profiles').select('id,display_name,username').in('id',profileIds);
+  if(seq!==socialLoadSeq||currentUser?.id!==uid)return;
+  if(error){console.error('Jasmine profile load',error);return;}
+  (ps||[]).forEach(p=>profiles.set(p.id,p));
+ }
+ friends=ids.map(id=>profiles.get(id)).filter(Boolean);
+ conversations=cs.map(c=>{const roster=members.filter(m=>m.conversation_id===c.id);const others=roster.filter(m=>m.user_id!==uid).map(m=>profiles.get(m.user_id)).filter(Boolean);return {...c,roster,displayTitle:c.is_group?c.title:(others[0]?safeName(others[0]):'Private chat')};});
+ $('requestCount').textContent=String(requests.filter(r=>r.receiver_id===uid&&r.status==='pending').length);$('chatCount').textContent=String(conversations.length);renderList();
+ if(activeConversationId&&!conversations.some(c=>c.id===activeConversationId)){activeConversationId=null;if(messageChannel){supabase.removeChannel(messageChannel);messageChannel=null;}$('activeConversation').hidden=true;$('socialWelcome').hidden=false;}
 }
-async function refresh(){await loadSocial();if(activeConversationId)await loadConversationMessages(activeConversationId);}
+
+async function refresh(){await loadSocial();}
 async function respondRequest(id,status){const {error}=await supabase.from('friend_requests').update({status}).eq('id',id);if(error){alert(error.message);return;}await refresh();}
-async function sendFriendRequest(id){const existing=requests.find(r=>(r.sender_id===currentUser.id&&r.receiver_id===id)||(r.sender_id===id&&r.receiver_id===currentUser.id));if(existing){alert(existing.status==='pending'?'A friend request is already pending.':'You have already interacted with this person.');return;}const {error}=await supabase.from('friend_requests').insert({sender_id:currentUser.id,receiver_id:id});if(error){alert(error.message);return;}await refresh();searchPeople($('peopleSearch').value);}
+async function sendFriendRequest(id){const uid=currentUser?.id;if(!uid||uid===id)return;const existing=requests.find(r=>(r.sender_id===uid&&r.receiver_id===id)||(r.sender_id===id&&r.receiver_id===uid));if(existing){alert(existing.status==='pending'?'A friend request is already pending.':'There is already a request between these accounts.');return;}const {error}=await supabase.from('friend_requests').insert({sender_id:uid,receiver_id:id});if(error){alert('Could not send friend request: '+error.message);return;}await refresh();searchPeople($('peopleSearch').value);}
 async function startDirect(friendId){
  const existing=conversations.find(c=>!c.is_group&&c.roster?.some(m=>m.user_id===friendId));
  if(existing){await openConversation(existing.id);return;}
@@ -676,39 +681,45 @@ async function startDirect(friendId){
  if(error){alert(error.message);return;}await refresh();await openConversation(data);
 }
 async function searchPeople(query){
- const results=$('peopleResults');results.replaceChildren();if(!query.trim()){return;}
- const {data,error}=await supabase.from('profiles').select('id,display_name').ilike('display_name','%'+query.trim().replace(/[%_]/g,'')+'%').neq('id',currentUser.id).limit(12);
+ const results=$('peopleResults'),seq=++searchSeq,uid=currentUser?.id;results.replaceChildren();if(!query.trim()||!uid)return;
+ const term=query.trim().replace(/[%,_()]/g,'');if(!term)return;
+ const {data,error}=await supabase.from('profiles').select('id,display_name,username').or('display_name.ilike.%'+term+'%,username.ilike.%'+term+'%').neq('id',uid).limit(12);
+ if(seq!==searchSeq||currentUser?.id!==uid||$('peopleSearch').value.trim()!==query.trim())return;
  if(error){results.append(el('p','social-empty','Search is unavailable right now.'));return;}
  (data||[]).forEach(p=>{const row=el('div','people-result');row.append(el('span','list-avatar small',initials(safeName(p))),el('span','list-copy',safeName(p)));const isFriend=friends.some(f=>f.id===p.id);const req=requests.find(r=>(r.sender_id===currentUser.id&&r.receiver_id===p.id)||(r.sender_id===p.id&&r.receiver_id===currentUser.id));const b=el('button','mini-action',isFriend?'Friend':req?(req.status==='pending'?'Pending':'Sent'):'＋ Add');b.type='button';b.disabled=isFriend||!!req;b.addEventListener('click',()=>sendFriendRequest(p.id));row.append(b);results.append(row);});
  if(!(data||[]).length)results.append(el('p','social-empty','No members found by that name.'));
 }
-let searchTimer; $('peopleSearch').addEventListener('input',e=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>searchPeople(e.target.value),220);});
+$('peopleSearch').addEventListener('input',e=>{clearTimeout(searchTimer);const value=e.target.value;searchTimer=setTimeout(()=>searchPeople(value),260);});
 async function openConversation(id){
- activeConversationId=id;const c=conversations.find(x=>x.id===id);if(!c)return;
+ const c=conversations.find(x=>x.id===id);if(!c)return;
+ activeConversationId=id;const seq=++messageLoadSeq;if(messageChannel){supabase.removeChannel(messageChannel);messageChannel=null;}
  $('socialWelcome').hidden=true;$('activeConversation').hidden=false;$('conversationTitle').textContent=c.displayTitle;$('conversationSub').textContent=c.is_group?'GROUP CONVERSATION':c.roster.length+' MEMBERS';$('conversationAvatar').textContent=c.is_group?'✳':initials(c.displayTitle);$('groupMembersBtn').hidden=!c.is_group;
- renderList();await loadConversationMessages(id);if(messageChannel)supabase.removeChannel(messageChannel);
- messageChannel=supabase.channel('jasmine-conversation-'+id).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'conversation_id=eq.'+id},payload=>{if(activeConversationId!==id)return;appendMessage(payload.new);}).subscribe();
+ $('conversationFeed').replaceChildren(el('p','social-empty','Loading messages…'));renderList();
+ messageChannel=supabase.channel('jasmine-conversation-'+id).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'conversation_id=eq.'+id},payload=>{if(activeConversationId===id)appendMessage(payload.new);}).subscribe();
+ await loadConversationMessages(id,seq);
 }
+
 function appendMessage(m){
  const feed=$('conversationFeed');if(feed.querySelector('[data-message-id="'+m.id+'"]'))return;
  const row=el('article','bubble-row'+(m.sender_id===currentUser.id?' mine':''));row.dataset.messageId=m.id;
  const bubble=el('div','message-bubble');const who=el('span','message-author',m.sender_id===currentUser.id?'You':safeName(profiles.get(m.sender_id)));const body=el('p','message-body',m.body);const time=el('time','message-time',new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}));bubble.append(who,body,time);row.append(bubble);feed.append(row);feed.scrollTop=feed.scrollHeight;
 }
-async function loadConversationMessages(id){
+async function loadConversationMessages(id,seq=++messageLoadSeq){
  const feed=$('conversationFeed');feed.replaceChildren(el('p','social-empty','Loading messages…'));
  const {data,error}=await supabase.from('messages').select('id,conversation_id,sender_id,body,created_at').eq('conversation_id',id).order('created_at',{ascending:true}).limit(150);
- if(error){feed.replaceChildren(el('p','social-empty','Could not load messages.'));console.error(error);return;}
+ if(seq!==messageLoadSeq||activeConversationId!==id)return;
+ if(error){feed.replaceChildren(el('p','social-empty','Could not load messages. Try again.'));console.error('Jasmine messages',error);return;}
  feed.replaceChildren();if(!data?.length)feed.append(el('p','social-empty','No messages yet. Say hello.'));
  (data||[]).forEach(appendMessage);
 }
-$('messageForm').addEventListener('submit',async e=>{e.preventDefault();const body=$('messageInput').value.trim();if(!body||!activeConversationId)return;const btn=e.currentTarget.querySelector('button');btn.disabled=true;const {data,error}=await supabase.from('messages').insert({conversation_id:activeConversationId,sender_id:currentUser.id,body}).select('id,conversation_id,sender_id,body,created_at').single();btn.disabled=false;if(error){alert(error.message);return;}$('messageInput').value='';appendMessage(data);});
+$('messageForm').addEventListener('submit',async e=>{e.preventDefault();const body=$('messageInput').value.trim(),cid=activeConversationId,uid=currentUser?.id;if(!body||!cid||!uid)return;const btn=e.currentTarget.querySelector('button'),input=$('messageInput');btn.disabled=true;try{const {data,error}=await supabase.from('messages').insert({conversation_id:cid,sender_id:uid,body}).select('id,conversation_id,sender_id,body,created_at').single();if(error)throw error;if(activeConversationId===cid){input.value='';appendMessage(data);}}catch(error){console.error('Jasmine send message',error);alert('Message not sent: '+(error.message||'Please try again.'));}finally{btn.disabled=false;}});
 $('newGroupBtn').addEventListener('click',()=>{renderGroupChoices();$('groupModal').hidden=false;});
 $('groupClose').addEventListener('click',()=>$('groupModal').hidden=true);
 function renderGroupChoices(){const box=$('groupFriendChoices');box.replaceChildren();if(friends.length<2){box.append(el('p','social-empty','Add at least two friends before creating a group.'));return;}friends.forEach(p=>{const label=el('label','group-choice');const input=document.createElement('input');input.type='checkbox';input.value=p.id;label.append(input,el('span','',safeName(p)));box.append(label);});}
 $('groupForm').addEventListener('submit',async e=>{e.preventDefault();const ids=Array.from($('groupFriendChoices').querySelectorAll('input:checked')).map(x=>x.value);if(ids.length<2){$('groupFeedback').textContent='Choose at least two friends.';return;}const title=$('groupName').value.trim();const {data,error}=await supabase.rpc('jasmine_create_conversation',{p_title:title,p_is_group:true,p_member_ids:ids});if(error){$('groupFeedback').textContent=error.message;return;}$('groupModal').hidden=true;$('groupName').value='';await refresh();await openConversation(data);});
 $('groupMembersBtn').addEventListener('click',()=>{const c=conversations.find(x=>x.id===activeConversationId);if(c)alert('Group members: '+c.roster.map(m=>safeName(profiles.get(m.user_id))).join(', '));});
-function showMember(user){currentUser=user;authBox.hidden=true;memberArea.hidden=false;$('chatAccountLabel').textContent='SIGNED IN AS '+displayName().toUpperCase();$('socialMeName').textContent=displayName();activeConversationId=null;$('activeConversation').hidden=true;$('socialWelcome').hidden=false;loadSocial();if(globalChannel)supabase.removeChannel(globalChannel);globalChannel=supabase.channel('jasmine-social-updates').on('postgres_changes',{event:'*',schema:'public',table:'friend_requests'},()=>refresh()).on('postgres_changes',{event:'INSERT',schema:'public',table:'friendships'},()=>refresh()).on('postgres_changes',{event:'INSERT',schema:'public',table:'conversation_members'},()=>refresh()).subscribe();}
-function showGuest(){currentUser=null;if(messageChannel)supabase.removeChannel(messageChannel);if(globalChannel)supabase.removeChannel(globalChannel);messageChannel=globalChannel=null;authBox.hidden=false;memberArea.hidden=true;activeConversationId=null;}
+function showMember(user){if(currentUser?.id===user.id&&!memberArea.hidden)return;if(messageChannel)supabase.removeChannel(messageChannel);if(globalChannel)supabase.removeChannel(globalChannel);messageChannel=globalChannel=null;currentUser=user;socialLoadSeq++;messageLoadSeq++;authBox.hidden=true;memberArea.hidden=false;$('chatAccountLabel').textContent='SIGNED IN AS '+displayName().toUpperCase();$('socialMeName').textContent=displayName();activeConversationId=null;$('activeConversation').hidden=true;$('socialWelcome').hidden=false;loadSocial();if(globalChannel)supabase.removeChannel(globalChannel);globalChannel=supabase.channel('jasmine-social-updates').on('postgres_changes',{event:'*',schema:'public',table:'friend_requests'},()=>refresh()).on('postgres_changes',{event:'INSERT',schema:'public',table:'friendships'},()=>refresh()).on('postgres_changes',{event:'INSERT',schema:'public',table:'conversation_members'},()=>refresh()).subscribe();}
+function showGuest(){if(!currentUser&&!authBox.hidden)return;currentUser=null;socialLoadSeq++;messageLoadSeq++;if(messageChannel)supabase.removeChannel(messageChannel);if(globalChannel)supabase.removeChannel(globalChannel);messageChannel=globalChannel=null;authBox.hidden=false;memberArea.hidden=true;activeConversationId=null;}
 authForm.addEventListener('submit',async e=>{e.preventDefault();if(busy)return;const username=emailInput.value.trim().toLowerCase(),password=passwordInput.value;if(!username||!password)return;if(!validUsername(username)){feedback('Use 3–20 characters: lowercase letters, numbers, or underscores.',true);return;}const email=usernameEmail(username);busy=true;authSubmit.disabled=true;authSubmit.textContent=mode==='signup'?'Creating account…':'Logging in…';try{if(mode==='signup'){const {data,error}=await supabase.auth.signUp({email,password,options:{data:{username,display_name:username}}});if(error)throw error;if(data.session){feedback('Account created. Welcome to Jasmine!');}else{setMode('login');feedback('Account created. Log in with your username and password. If confirmation is required, disable email confirmations in Supabase Auth settings first.');}}else{const {error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;feedback('Welcome back!');}}catch(error){const message=error&&error.message?error.message:'Could not complete that request.';const lower=message.toLowerCase();if(lower.includes('database error saving new user')||lower.includes('profiles')||lower.includes('username')){feedback(message+' — check that supabase/username-auth.sql has been run in the Supabase SQL Editor.',true);}else if(lower.includes('email not confirmed')||lower.includes('confirm')){feedback(message+' — turn off Confirm email in Supabase Authentication → Providers → Email.',true);}else{feedback(message,true);}}finally{busy=false;authSubmit.disabled=false;authSubmit.textContent=mode==='signup'?'Create account':'Log in';}});
 $('chatSignOut').addEventListener('click',async()=>{const {error}=await supabase.auth.signOut();if(error)alert(error.message);});
 supabase.auth.onAuthStateChange((event,session)=>{if(session?.user)showMember(session.user);else if(event==='SIGNED_OUT'||event==='INITIAL_SESSION')showGuest();});
