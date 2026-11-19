@@ -1380,23 +1380,34 @@
 <script>
 (function(){
   var wasPlaying=document.body.classList.contains('playing');
+  function naturalHeight(){
+    var wrap=document.querySelector('.wrap');
+    if(!wrap)return 520;
+    var rect=wrap.getBoundingClientRect();
+    var css=getComputedStyle(document.body);
+    return Math.ceil(rect.bottom+window.scrollY+(parseFloat(css.paddingBottom)||0)+8);
+  }
   function report(forcedType){
     var playing=document.body.classList.contains('playing');
     var type=forcedType||'mg-resize';
     if(!forcedType){
-      if(playing&&!wasPlaying) type='mg-open';
-      else if(!playing&&wasPlaying) type='mg-close';
+      if(playing&&!wasPlaying)type='mg-open';
+      else if(!playing&&wasPlaying)type='mg-close';
     }
     wasPlaying=playing;
-    parent.postMessage({type:type,height:document.documentElement.scrollHeight},location.origin);
+    parent.postMessage({type:type,height:playing?Math.max(520,window.innerHeight):naturalHeight()},location.origin);
   }
   window.__notifyParentGameState=function(type){report(type);};
   window.addEventListener('load',function(){report('mg-resize');});
   window.addEventListener('resize',function(){report('mg-resize');});
-  if(window.ResizeObserver){new ResizeObserver(function(){if(!document.body.classList.contains('playing'))report('mg-resize');}).observe(document.querySelector('.wrap'));}
+  if(window.ResizeObserver)new ResizeObserver(function(){if(!document.body.classList.contains('playing'))report('mg-resize');}).observe(document.querySelector('.wrap'));
   new MutationObserver(function(){report();}).observe(document.body,{attributes:true,attributeFilter:['class']});
 })();
 </script>
+<style id="jasmine-natural-embed-height">
+  html,body{height:auto!important;min-height:0!important}
+  body{padding-bottom:22px!important}
+</style>
 
 
 <style id="jasmine-games-refinement">
