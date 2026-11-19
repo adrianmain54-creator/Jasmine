@@ -558,10 +558,10 @@
 </section>
 <section class="site-section" id="communityChat">
   <div class="site-section-head">
-    <div><p class="site-kicker">AFTER THE GAME</p><h2>Community chat</h2><p class="site-sub">Say hello, share a score, or find someone to play with.</p></div>
+    <div><p class="site-kicker">FIND YOUR PEOPLE</p><h2>Jasmine messages</h2><p class="site-sub">A quieter corner for your friends, little groups, and good conversations.</p></div>
   </div>
   <div class="chat-auth" id="chatAuth">
-    <div class="chat-auth-copy"><span class="chat-auth-mark">✳</span><p class="site-kicker">THE JASMINE COMMUNITY</p><h3 id="authHeading">A little corner to connect.</h3><p>Sign in or create an account to join the conversation, share scores, and meet other players.</p></div>
+    <div class="chat-auth-copy"><span class="chat-auth-mark">✳</span><p class="site-kicker">THE JASMINE COMMUNITY</p><h3 id="authHeading">A little corner to connect.</h3><p>Sign in or create an account to find friends and start conversations.</p></div>
     <form class="chat-auth-form" id="authForm">
       <div class="auth-tabs" role="tablist" aria-label="Account access">
         <button type="button" class="auth-tab active" id="authLoginTab" aria-selected="true">Log in</button>
@@ -571,167 +571,146 @@
       <label class="auth-field"><span>Email</span><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required></label>
       <label class="auth-field"><span>Password</span><input id="authPassword" type="password" minlength="8" autocomplete="current-password" placeholder="At least 8 characters" required></label>
       <button class="auth-submit" id="authSubmit" type="submit">Log in</button>
-      <p class="auth-feedback" id="authFeedback" role="status" aria-live="polite">Your account keeps your chat identity yours.</p>
+      <p class="auth-feedback" id="authFeedback" role="status" aria-live="polite">Your account keeps your conversations yours.</p>
     </form>
   </div>
   <div id="chatMemberArea" hidden>
     <div class="chat-account-bar"><span class="chat-account-label" id="chatAccountLabel">SIGNED IN</span><button type="button" class="chat-signout" id="chatSignOut">Log out</button></div>
-    <div class="chat-shell">
-      <div class="chat-top"><div><h3 class="chat-title">The Minigames Lounge</h3><p class="chat-meta">COMMUNITY BOARD</p></div><span class="chat-meta" id="chatStatus">CONNECTING…</span></div>
-      <div class="chat-feed" id="chatFeed" aria-live="polite"><p class="chat-empty" id="chatEmpty">No messages yet. Start the conversation.</p></div>
-      <form class="chat-compose" id="chatForm">
-        <div class="chat-compose-row"><input id="chatInput" maxlength="500" autocomplete="off" aria-label="Message" placeholder="Write a message..." required><button class="chat-send" type="submit">Send</button></div>
-        <p class="chat-note">Posting as your account. Be kind to the garden.</p>
+    <div class="social-app">
+      <aside class="social-sidebar">
+        <div class="social-me"><span class="social-flower">✳</span><div><strong id="socialMeName">Your garden</strong><small>JASMINE MEMBER</small></div></div>
+        <div class="social-tabs">
+          <button class="social-tab active" data-view="chats">Messages <span id="chatCount">0</span></button>
+          <button class="social-tab" data-view="friends">Friends</button>
+          <button class="social-tab" data-view="requests">Requests <span id="requestCount">0</span></button>
+        </div>
+        <div class="social-list-head"><span id="listHeading">YOUR CHATS</span><button id="newGroupBtn" type="button" title="Create group chat">＋ Group</button></div>
+        <div class="social-list" id="socialList"><p class="social-empty">Your conversations will grow here.</p></div>
+        <div class="social-search"><label for="peopleSearch">FIND PEOPLE</label><input id="peopleSearch" placeholder="Search display names…" autocomplete="off"><div id="peopleResults" class="people-results"></div></div>
+      </aside>
+      <section class="social-conversation">
+        <div class="social-welcome" id="socialWelcome"><span>✳</span><p class="site-kicker">A GARDEN OF CONVERSATIONS</p><h3>Good things grow together.</h3><p>Choose a conversation, find a friend, or start a group.</p></div>
+        <div id="activeConversation" hidden>
+          <header class="conversation-head"><div class="conversation-avatar" id="conversationAvatar">✳</div><div><h3 id="conversationTitle">Conversation</h3><p id="conversationSub">JASMINE MESSAGES</p></div><button id="groupMembersBtn" type="button" hidden>Members</button></header>
+          <div class="conversation-feed" id="conversationFeed"><p class="social-empty">No messages yet. Say hello.</p></div>
+          <form class="conversation-compose" id="messageForm"><input id="messageInput" maxlength="2000" placeholder="Write something kind…" autocomplete="off" required><button type="submit">Send <span>↗</span></button></form>
+        </div>
+      </section>
+    </div>
+    <div class="group-modal" id="groupModal" hidden>
+      <form id="groupForm" class="group-dialog">
+        <button type="button" class="group-close" id="groupClose" aria-label="Close">×</button>
+        <p class="site-kicker">GROW A LITTLE CIRCLE</p><h3>Create a group</h3>
+        <label class="auth-field"><span>Group name</span><input id="groupName" maxlength="40" placeholder="The greenhouse" required></label>
+        <p class="group-prompt">Choose at least two friends to invite.</p><div id="groupFriendChoices" class="group-friend-choices"></div>
+        <button class="auth-submit" type="submit">Create group chat</button><p class="auth-feedback" id="groupFeedback" role="status"></p>
       </form>
     </div>
   </div>
 </section>
-<script>
-(function(){
-  var frame=document.getElementById('gamesFrame'),naturalHeight=1450;
-  window.addEventListener('message',function(e){
-    if(e.source!==frame.contentWindow||!e.data)return;
-    if(e.data.type==='mg-resize'){
-      naturalHeight=Math.max(700,Math.min(5000,Number(e.data.height)||1450));
-      frame.style.height=naturalHeight+'px';
-    }else if(e.data.type==='mg-close'){document.body.style.overflow='';}
-  });
-  frame.addEventListener('load',function(){if(!frame.dataset.loaded)return;try{naturalHeight=Math.max(700,frame.contentDocument.documentElement.scrollHeight);frame.style.height=naturalHeight+'px';}catch(e){}sendVisibility(true);});
-  function loadGames(){if(frame.dataset.loaded)return;frame.dataset.loaded='true';frame.src=frame.dataset.src;}
-  function sendVisibility(visible){try{if(frame.contentWindow)frame.contentWindow.postMessage({type:'mg-visibility',visible:!!visible},location.origin);}catch(e){}}
-  if('IntersectionObserver' in window){
-    var observer=new IntersectionObserver(function(entries){
-      var visible=!!(entries[0]&&entries[0].isIntersecting);
-      if(visible){loadGames();sendVisibility(true);}else sendVisibility(false);
-    },{rootMargin:'80px 0px'});
-    observer.observe(frame);
-  }else{loadGames();sendVisibility(true);}
-})();
-</script>
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-const supabase = createClient(
-  'https://jkossymjujldzsmxyutq.supabase.co',
-  'sb_publishable_a9aZehf-5egAc3GUg0BA_g_xtEcnv0q'
-);
-const $ = id => document.getElementById(id);
-const authBox=$('chatAuth'), memberArea=$('chatMemberArea'), authForm=$('authForm');
-const authFeedback=$('authFeedback'), authSubmit=$('authSubmit');
-const nameField=$('authNameField'), nameInput=$('authName'), emailInput=$('authEmail'), passwordInput=$('authPassword');
-const feed=$('chatFeed'), empty=$('chatEmpty'), form=$('chatForm'), messageInput=$('chatInput');
-const status=$('chatStatus'), accountLabel=$('chatAccountLabel');
-let mode='login', currentUser=null, messages=[], channel=null, busy=false;
-
-function setFeedback(message,isError=false){authFeedback.textContent=message;authFeedback.classList.toggle('error',isError);}
-function setStatus(value){if(status)status.textContent=value;}
-function setMode(next){
-  mode=next;
-  const signup=mode==='signup';
-  $('authLoginTab').classList.toggle('active',!signup);
-  $('authSignupTab').classList.toggle('active',signup);
-  $('authLoginTab').setAttribute('aria-selected',String(!signup));
-  $('authSignupTab').setAttribute('aria-selected',String(signup));
-  nameField.hidden=!signup;
-  nameInput.required=signup;
-  passwordInput.autocomplete=signup?'new-password':'current-password';
-  $('authHeading').textContent=signup?'Make yourself at home.':'A little corner to connect.';
-  authSubmit.textContent=signup?'Create account':'Log in';
-  setFeedback(signup?'Create an account to join the Jasmine community.':'Welcome back. Your garden is waiting.');
+const supabase=createClient('https://jkossymjujldzsmxyutq.supabase.co','sb_publishable_a9aZehf-5egAc3GUg0BA_g_xtEcnv0q');
+const $=id=>document.getElementById(id);
+const authBox=$('chatAuth'),memberArea=$('chatMemberArea'),authForm=$('authForm');
+const authFeedback=$('authFeedback'),authSubmit=$('authSubmit'),nameField=$('authNameField'),nameInput=$('authName'),emailInput=$('authEmail'),passwordInput=$('authPassword');
+let mode='login',currentUser=null,busy=false,activeView='chats',friends=[],requests=[],conversations=[],activeConversationId=null,messageChannel=null,globalChannel=null,profiles=new Map();
+const safeName=user=>user?.display_name||'Jasmine member';
+function feedback(message,error=false){authFeedback.textContent=message;authFeedback.classList.toggle('error',error);}
+function displayName(){return currentUser?.user_metadata?.display_name||currentUser?.email?.split('@')[0]||'Jasmine member';}
+function setMode(next){mode=next;const signup=mode==='signup';$('authLoginTab').classList.toggle('active',!signup);$('authSignupTab').classList.toggle('active',signup);$('authLoginTab').setAttribute('aria-selected',String(!signup));$('authSignupTab').setAttribute('aria-selected',String(signup));nameField.hidden=!signup;nameInput.required=signup;passwordInput.autocomplete=signup?'new-password':'current-password';$('authHeading').textContent=signup?'Make yourself at home.':'A little corner to connect.';authSubmit.textContent=signup?'Create account':'Log in';feedback(signup?'Create an account to meet your people.':'Welcome back. Your garden is waiting.');}
+$('authLoginTab').addEventListener('click',()=>setMode('login'));$('authSignupTab').addEventListener('click',()=>setMode('signup'));
+function el(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;}
+function initials(name){return (name||'J').trim().slice(0,1).toUpperCase();}
+function setView(view){activeView=view;document.querySelectorAll('.social-tab').forEach(b=>b.classList.toggle('active',b.dataset.view===view));$('listHeading').textContent=view==='chats'?'YOUR CHATS':view==='friends'?'YOUR FRIENDS':'FRIEND REQUESTS';$('newGroupBtn').hidden=view!=='chats';renderList();}
+document.querySelectorAll('.social-tab').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+function renderList(){
+ const list=$('socialList');list.replaceChildren();
+ if(activeView==='chats'){
+  if(!conversations.length){list.append(el('p','social-empty','No chats yet. Find a friend below to start one.'));return;}
+  conversations.forEach(c=>{const b=el('button','social-list-item'+(c.id===activeConversationId?' selected':''));b.type='button';b.addEventListener('click',()=>openConversation(c.id));b.append(el('span','list-avatar',c.is_group?'✳':initials(c.displayTitle)),el('span','list-copy',c.displayTitle),el('span','list-arrow','›'));list.append(b);});
+ }else if(activeView==='friends'){
+  if(!friends.length){list.append(el('p','social-empty','No friends yet. Search for someone to connect.'));return;}
+  friends.forEach(p=>{const row=el('div','social-person');row.append(el('span','list-avatar',initials(safeName(p))),el('span','list-copy',safeName(p)));const b=el('button','mini-action','Message');b.type='button';b.addEventListener('click',()=>startDirect(p.id));row.append(b);list.append(row);});
+ }else{
+  const incoming=requests.filter(r=>r.receiver_id===currentUser.id&&r.status==='pending');
+  if(!incoming.length){list.append(el('p','social-empty','You’re all caught up. New requests will appear here.'));return;}
+  incoming.forEach(r=>{const p=profiles.get(r.sender_id)||{display_name:'Jasmine member'};const row=el('div','request-card');row.append(el('span','list-avatar',initials(safeName(p))),el('span','list-copy',safeName(p)));const actions=el('div','request-actions');const yes=el('button','mini-action','Accept'),no=el('button','mini-action quiet','Decline');yes.type=no.type='button';yes.addEventListener('click',()=>respondRequest(r.id,'accepted'));no.addEventListener('click',()=>respondRequest(r.id,'declined'));actions.append(yes,no);row.append(actions);list.append(row);});
+ }
 }
-$('authLoginTab').addEventListener('click',()=>setMode('login'));
-$('authSignupTab').addEventListener('click',()=>setMode('signup'));
-
-function render(){
-  feed.innerHTML='';
-  if(!messages.length){feed.appendChild(empty);return;}
-  messages.slice(-100).forEach(m=>{
-    const row=document.createElement('div');row.className='chat-message';
-    const avatar=document.createElement('div');avatar.className='chat-avatar';avatar.textContent=(m.name||'P').slice(0,1).toUpperCase();
-    const main=document.createElement('div');main.className='chat-msg-main';
-    const head=document.createElement('div');head.className='chat-msg-head';
-    const who=document.createElement('span');who.className='chat-msg-name';who.textContent=m.name||'Jasmine member';
-    const when=document.createElement('span');when.className='chat-msg-time';when.textContent=new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
-    const body=document.createElement('p');body.className='chat-msg-text';body.textContent=m.message;
-    head.append(who,when);main.append(head,body);row.append(avatar,main);feed.appendChild(row);
-  });
-  feed.scrollTop=feed.scrollHeight;
+async function loadSocial(){
+ if(!currentUser)return;
+ const [profileRes,friendRes,requestRes,memberRes]=await Promise.all([
+  supabase.from('profiles').select('id,display_name').limit(500),
+  supabase.from('friendships').select('user_a,user_b').or('user_a.eq.'+currentUser.id+',user_b.eq.'+currentUser.id),
+  supabase.from('friend_requests').select('id,sender_id,receiver_id,status,created_at').or('sender_id.eq.'+currentUser.id+',receiver_id.eq.'+currentUser.id).order('created_at',{ascending:false}),
+  supabase.from('conversation_members').select('conversation_id').eq('user_id',currentUser.id)
+ ]);
+ for(const p of profileRes.data||[])profiles.set(p.id,p);
+ if(profileRes.error||friendRes.error||requestRes.error||memberRes.error){console.error('Jasmine social load',profileRes.error||friendRes.error||requestRes.error||memberRes.error);return;}
+ const ids=(friendRes.data||[]).map(f=>f.user_a===currentUser.id?f.user_b:f.user_a);
+ friends=ids.map(id=>profiles.get(id)).filter(Boolean);
+ requests=requestRes.data||[];
+ $('requestCount').textContent=String(requests.filter(r=>r.receiver_id===currentUser.id&&r.status==='pending').length);
+ const convIds=(memberRes.data||[]).map(m=>m.conversation_id);
+ conversations=[];
+ if(convIds.length){
+  const {data:cs,error}=await supabase.from('conversations').select('id,title,is_group,created_at').in('id',convIds).order('created_at',{ascending:false});
+  if(!error){
+   const {data:members}=await supabase.from('conversation_members').select('conversation_id,user_id').in('conversation_id',convIds);
+   conversations=(cs||[]).map(c=>{const roster=(members||[]).filter(m=>m.conversation_id===c.id);const others=roster.filter(m=>m.user_id!==currentUser.id).map(m=>profiles.get(m.user_id)).filter(Boolean);return {...c,roster,displayTitle:c.is_group?c.title:(others[0]?safeName(others[0]):'Private chat')};});
+  }
+ }
+ $('chatCount').textContent=String(conversations.length);renderList();
+ if(activeConversationId&&!conversations.some(c=>c.id===activeConversationId)){activeConversationId=null;$('activeConversation').hidden=true;$('socialWelcome').hidden=false;}
 }
-async function loadMessages(){
-  if(!currentUser)return;
-  setStatus('LOADING CHAT…');
-  const {data,error}=await supabase.from('chat_messages').select('id,name,message,created_at').order('created_at',{ascending:true}).limit(100);
-  if(error){setStatus('CHAT UNAVAILABLE');console.error('Supabase chat load:',error);return;}
-  messages=data||[];render();setStatus('COMMUNITY ONLINE');
+async function refresh(){await loadSocial();if(activeConversationId)await loadConversationMessages(activeConversationId);}
+async function respondRequest(id,status){const {error}=await supabase.from('friend_requests').update({status}).eq('id',id);if(error){alert(error.message);return;}await refresh();}
+async function sendFriendRequest(id){const existing=requests.find(r=>(r.sender_id===currentUser.id&&r.receiver_id===id)||(r.sender_id===id&&r.receiver_id===currentUser.id));if(existing){alert(existing.status==='pending'?'A friend request is already pending.':'You have already interacted with this person.');return;}const {error}=await supabase.from('friend_requests').insert({sender_id:currentUser.id,receiver_id:id});if(error){alert(error.message);return;}await refresh();searchPeople($('peopleSearch').value);}
+async function startDirect(friendId){
+ const existing=conversations.find(c=>!c.is_group&&c.roster?.some(m=>m.user_id===friendId));
+ if(existing){await openConversation(existing.id);return;}
+ const {data,error}=await supabase.rpc('jasmine_create_conversation',{p_title:null,p_is_group:false,p_member_ids:[friendId]});
+ if(error){alert(error.message);return;}await refresh();await openConversation(data);
 }
-function startRealtime(){
-  if(channel)supabase.removeChannel(channel);
-  channel=supabase.channel('jasmine-chat-room-auth')
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},payload=>{
-      if(!currentUser||messages.some(m=>m.id===payload.new.id))return;
-      messages.push(payload.new);messages=messages.slice(-100);render();
-    })
-    .subscribe(state=>{if(state==='SUBSCRIBED'&&currentUser)setStatus('COMMUNITY ONLINE');});
+async function searchPeople(query){
+ const results=$('peopleResults');results.replaceChildren();if(!query.trim()){return;}
+ const {data,error}=await supabase.from('profiles').select('id,display_name').ilike('display_name','%'+query.trim().replace(/[%_]/g,'')+'%').neq('id',currentUser.id).limit(12);
+ if(error){results.append(el('p','social-empty','Search is unavailable right now.'));return;}
+ (data||[]).forEach(p=>{const row=el('div','people-result');row.append(el('span','list-avatar small',initials(safeName(p))),el('span','list-copy',safeName(p)));const isFriend=friends.some(f=>f.id===p.id);const req=requests.find(r=>(r.sender_id===currentUser.id&&r.receiver_id===p.id)||(r.sender_id===p.id&&r.receiver_id===currentUser.id));const b=el('button','mini-action',isFriend?'Friend':req?(req.status==='pending'?'Pending':'Sent'):'＋ Add');b.type='button';b.disabled=isFriend||!!req;b.addEventListener('click',()=>sendFriendRequest(p.id));row.append(b);results.append(row);});
+ if(!(data||[]).length)results.append(el('p','social-empty','No members found by that name.'));
 }
-function showMember(user){
-  if(currentUser&&currentUser.id===user.id&&!memberArea.hidden)return;
-  currentUser=user;authBox.hidden=true;memberArea.hidden=false;
-  const display=(user.user_metadata&&user.user_metadata.display_name)||user.email.split('@')[0];
-  accountLabel.textContent='SIGNED IN AS '+display.toUpperCase();
-  messages=[];render();loadMessages();startRealtime();
+let searchTimer; $('peopleSearch').addEventListener('input',e=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>searchPeople(e.target.value),220);});
+async function openConversation(id){
+ activeConversationId=id;const c=conversations.find(x=>x.id===id);if(!c)return;
+ $('socialWelcome').hidden=true;$('activeConversation').hidden=false;$('conversationTitle').textContent=c.displayTitle;$('conversationSub').textContent=c.is_group?'GROUP CONVERSATION':c.roster.length+' MEMBERS';$('conversationAvatar').textContent=c.is_group?'✳':initials(c.displayTitle);$('groupMembersBtn').hidden=!c.is_group;
+ renderList();await loadConversationMessages(id);if(messageChannel)supabase.removeChannel(messageChannel);
+ messageChannel=supabase.channel('jasmine-conversation-'+id).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'conversation_id=eq.'+id},payload=>{if(activeConversationId!==id)return;appendMessage(payload.new);}).subscribe();
 }
-function showGuest(){
-  currentUser=null;
-  if(channel){supabase.removeChannel(channel);channel=null;}
-  messages=[];authBox.hidden=false;memberArea.hidden=true;
-  setStatus('SIGN IN REQUIRED');
-  if(feed)render();
+function appendMessage(m){
+ const feed=$('conversationFeed');if(feed.querySelector('[data-message-id="'+m.id+'"]'))return;
+ const row=el('article','bubble-row'+(m.sender_id===currentUser.id?' mine':''));row.dataset.messageId=m.id;
+ const bubble=el('div','message-bubble');const who=el('span','message-author',m.sender_id===currentUser.id?'You':safeName(profiles.get(m.sender_id)));const body=el('p','message-body',m.body);const time=el('time','message-time',new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}));bubble.append(who,body,time);row.append(bubble);feed.append(row);feed.scrollTop=feed.scrollHeight;
 }
-authForm.addEventListener('submit',async e=>{
-  e.preventDefault();if(busy)return;
-  const email=emailInput.value.trim(),password=passwordInput.value;
-  if(!email||!password)return;
-  if(mode==='signup'&&nameInput.value.trim().length<2){setFeedback('Please choose a display name with at least 2 characters.',true);return;}
-  busy=true;authSubmit.disabled=true;authSubmit.textContent=mode==='signup'?'Creating account…':'Logging in…';
-  try{
-    if(mode==='signup'){
-      const {data,error}=await supabase.auth.signUp({email,password,options:{data:{display_name:nameInput.value.trim().slice(0,20)}}});
-      if(error)throw error;
-      if(data.session){setFeedback('Account created. Welcome to Jasmine!');}
-      else{setMode('login');setFeedback('Almost there — check your email for the confirmation link, then come back and log in.');}
-    }else{
-      const {error}=await supabase.auth.signInWithPassword({email,password});
-      if(error)throw error;
-      setFeedback('You’re in. Welcome back!');
-    }
-  }catch(error){setFeedback(error.message||'Could not complete that request. Please try again.',true);}
-  finally{busy=false;authSubmit.disabled=false;authSubmit.textContent=mode==='signup'?'Create account':'Log in';}
-});
-$('chatSignOut').addEventListener('click',async()=>{
-  $('chatSignOut').disabled=true;
-  const {error}=await supabase.auth.signOut();
-  $('chatSignOut').disabled=false;
-  if(error){setStatus('LOG OUT FAILED');console.error(error);}
-});
-form.addEventListener('submit',async e=>{
-  e.preventDefault();
-  const message=messageInput.value.trim();
-  if(!message||!currentUser)return;
-  const button=form.querySelector('button[type="submit"]');
-  button.disabled=true;setStatus('SENDING…');
-  const display=(currentUser.user_metadata&&currentUser.user_metadata.display_name)||currentUser.email.split('@')[0];
-  const {data,error}=await supabase.from('chat_messages').insert({name:display.slice(0,20),message,user_id:currentUser.id}).select('id,name,message,created_at').single();
-  button.disabled=false;
-  if(error){setStatus('MESSAGE NOT SENT');console.error('Supabase chat insert:',error);return;}
-  messageInput.value='';
-  if(!messages.some(m=>m.id===data.id)){messages.push(data);messages=messages.slice(-100);render();}
-  setStatus('COMMUNITY ONLINE');messageInput.focus();
-});
-supabase.auth.onAuthStateChange((event,session)=>{
-  if(session?.user){showMember(session.user);}
-  else if(event==='SIGNED_OUT'||event==='INITIAL_SESSION'){showGuest();}
-});
-const {data:{session}}=await supabase.auth.getSession();
-if(session?.user)showMember(session.user);else showGuest();
+async function loadConversationMessages(id){
+ const feed=$('conversationFeed');feed.replaceChildren(el('p','social-empty','Loading messages…'));
+ const {data,error}=await supabase.from('messages').select('id,conversation_id,sender_id,body,created_at').eq('conversation_id',id).order('created_at',{ascending:true}).limit(150);
+ if(error){feed.replaceChildren(el('p','social-empty','Could not load messages.'));console.error(error);return;}
+ feed.replaceChildren();if(!data?.length)feed.append(el('p','social-empty','No messages yet. Say hello.'));
+ (data||[]).forEach(appendMessage);
+}
+$('messageForm').addEventListener('submit',async e=>{e.preventDefault();const body=$('messageInput').value.trim();if(!body||!activeConversationId)return;const btn=e.currentTarget.querySelector('button');btn.disabled=true;const {data,error}=await supabase.from('messages').insert({conversation_id:activeConversationId,sender_id:currentUser.id,body}).select('id,conversation_id,sender_id,body,created_at').single();btn.disabled=false;if(error){alert(error.message);return;}$('messageInput').value='';appendMessage(data);});
+$('newGroupBtn').addEventListener('click',()=>{renderGroupChoices();$('groupModal').hidden=false;});
+$('groupClose').addEventListener('click',()=>$('groupModal').hidden=true);
+function renderGroupChoices(){const box=$('groupFriendChoices');box.replaceChildren();if(friends.length<2){box.append(el('p','social-empty','Add at least two friends before creating a group.'));return;}friends.forEach(p=>{const label=el('label','group-choice');const input=document.createElement('input');input.type='checkbox';input.value=p.id;label.append(input,el('span','',safeName(p)));box.append(label);});}
+$('groupForm').addEventListener('submit',async e=>{e.preventDefault();const ids=Array.from($('groupFriendChoices').querySelectorAll('input:checked')).map(x=>x.value);if(ids.length<2){$('groupFeedback').textContent='Choose at least two friends.';return;}const title=$('groupName').value.trim();const {data,error}=await supabase.rpc('jasmine_create_conversation',{p_title:title,p_is_group:true,p_member_ids:ids});if(error){$('groupFeedback').textContent=error.message;return;}$('groupModal').hidden=true;$('groupName').value='';await refresh();await openConversation(data);});
+$('groupMembersBtn').addEventListener('click',()=>{const c=conversations.find(x=>x.id===activeConversationId);if(c)alert('Group members: '+c.roster.map(m=>safeName(profiles.get(m.user_id))).join(', '));});
+function showMember(user){currentUser=user;authBox.hidden=true;memberArea.hidden=false;$('chatAccountLabel').textContent='SIGNED IN AS '+displayName().toUpperCase();$('socialMeName').textContent=displayName();activeConversationId=null;$('activeConversation').hidden=true;$('socialWelcome').hidden=false;loadSocial();if(globalChannel)supabase.removeChannel(globalChannel);globalChannel=supabase.channel('jasmine-social-updates').on('postgres_changes',{event:'*',schema:'public',table:'friend_requests'},()=>refresh()).on('postgres_changes',{event:'INSERT',schema:'public',table:'friendships'},()=>refresh()).on('postgres_changes',{event:'INSERT',schema:'public',table:'conversation_members'},()=>refresh()).subscribe();}
+function showGuest(){currentUser=null;if(messageChannel)supabase.removeChannel(messageChannel);if(globalChannel)supabase.removeChannel(globalChannel);messageChannel=globalChannel=null;authBox.hidden=false;memberArea.hidden=true;activeConversationId=null;}
+authForm.addEventListener('submit',async e=>{e.preventDefault();if(busy)return;const email=emailInput.value.trim(),password=passwordInput.value;if(!email||!password)return;if(mode==='signup'&&nameInput.value.trim().length<2){feedback('Please choose a display name with at least 2 characters.',true);return;}busy=true;authSubmit.disabled=true;authSubmit.textContent=mode==='signup'?'Creating account…':'Logging in…';try{if(mode==='signup'){const {data,error}=await supabase.auth.signUp({email,password,options:{data:{display_name:nameInput.value.trim().slice(0,20)}}});if(error)throw error;if(data.session){feedback('Account created. Welcome to Jasmine!');}else{setMode('login');feedback('Check your email for the confirmation link, then log in.');}}else{const {error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;feedback('Welcome back!');}}catch(error){feedback(error.message||'Could not complete that request.',true);}finally{busy=false;authSubmit.disabled=false;authSubmit.textContent=mode==='signup'?'Create account':'Log in';}});
+$('chatSignOut').addEventListener('click',async()=>{const {error}=await supabase.auth.signOut();if(error)alert(error.message);});
+supabase.auth.onAuthStateChange((event,session)=>{if(session?.user)showMember(session.user);else if(event==='SIGNED_OUT'||event==='INITIAL_SESSION')showGuest();});
+const {data:{session}}=await supabase.auth.getSession();if(session?.user)showMember(session.user);else showGuest();
 </script>
 
 
@@ -1108,6 +1087,44 @@ if(session?.user)showMember(session.user);else showGuest();
   }
 </style>
 
+
+<style id="jasmine-social-messaging">
+.social-app{display:grid;grid-template-columns:minmax(245px,330px) minmax(0,1fr);min-height:650px;border:1px solid rgba(218,230,207,.17);background:#0c1510;box-shadow:0 28px 80px rgba(0,0,0,.24)}
+.social-sidebar{display:flex;flex-direction:column;min-width:0;border-right:1px solid rgba(218,230,207,.14);background:linear-gradient(180deg,#142219,#0d1710)}
+.social-me{display:flex;align-items:center;gap:12px;padding:22px 20px;border-bottom:1px solid rgba(218,230,207,.12)}
+.social-flower{display:grid;place-items:center;width:38px;height:38px;background:#293e2c;color:#e2c58e;font-size:20px}
+.social-me strong,.social-me small{display:block}.social-me strong{font:400 1.12rem var(--display)}.social-me small{margin-top:3px;color:#a9b88f;font:500 .58rem var(--mono);letter-spacing:.12em}
+.social-tabs{display:grid;grid-template-columns:repeat(3,1fr);padding:12px 12px 0;gap:4px}
+.social-tab{min-width:0;padding:10px 5px;border:0;border-bottom:2px solid transparent;background:none;color:#a9b4a7;font:500 .78rem var(--body);cursor:pointer}
+.social-tab span{display:inline-grid;place-items:center;min-width:17px;height:17px;margin-left:3px;padding:0 4px;background:rgba(215,173,105,.13);color:#dfc18b;font-size:.65rem}
+.social-tab.active{color:#f4f0e6;border-color:#d7ad69}
+.social-list-head{display:flex;align-items:center;justify-content:space-between;padding:19px 18px 9px;color:#a9b88f;font:500 .62rem var(--mono);letter-spacing:.12em}
+.social-list-head button{border:1px solid rgba(215,173,105,.35);background:transparent;color:#e4d5b3;padding:6px 9px;font:500 .68rem var(--body);cursor:pointer}
+.social-list{min-height:130px;max-height:290px;overflow:auto;padding:0 9px 10px}
+.social-list-item,.social-person,.request-card{display:flex;align-items:center;gap:10px;width:100%;padding:11px 9px;border:0;border-bottom:1px solid rgba(218,230,207,.07);background:transparent;color:#f4f0e6;text-align:left}
+.social-list-item{cursor:pointer}.social-list-item:hover,.social-list-item.selected{background:rgba(220,231,210,.07)}
+.list-avatar,.conversation-avatar{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;background:#2a4430;color:#e5d4aa;font:500 .85rem var(--display)}
+.list-avatar.small{width:30px;height:30px;flex-basis:30px;font-size:.75rem}
+.list-copy{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.83rem}
+.list-arrow{color:#9eaa92;font-size:1.2rem}.mini-action{flex:0 0 auto;border:1px solid rgba(215,173,105,.38);background:rgba(215,173,105,.08);color:#e5d4aa;padding:6px 8px;font:500 .68rem var(--body);cursor:pointer}.mini-action:disabled{opacity:.55;cursor:default}.mini-action.quiet{border-color:rgba(218,230,207,.16);background:none;color:#a9b4a7}
+.request-card{flex-wrap:wrap}.request-actions{display:flex;gap:5px;margin-left:auto}
+.social-empty{padding:16px 12px;color:#a9b4a7;font-size:.8rem;line-height:1.55}
+.social-search{margin-top:auto;padding:16px 16px 18px;border-top:1px solid rgba(218,230,207,.12)}
+.social-search label{display:block;margin-bottom:8px;color:#a9b88f;font:500 .62rem var(--mono);letter-spacing:.12em}
+.social-search input,.group-dialog input{width:100%;min-width:0;border:1px solid rgba(218,230,207,.18);border-radius:2px;background:#09110c;color:#f4f0e6;padding:11px 12px;font:400 .82rem var(--body);outline:none}
+.social-search input:focus,.group-dialog input:focus{border-color:#d7ad69}
+.people-results{max-height:180px;overflow:auto}.people-result{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(218,230,207,.07)}
+.social-conversation{position:relative;display:flex;flex-direction:column;min-width:0;min-height:650px;background:radial-gradient(ellipse at 55% 0%,rgba(65,91,58,.13),transparent 55%),#0b130e}
+.social-welcome{display:flex;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center}.social-welcome>span{display:grid;place-items:center;width:62px;height:62px;margin-bottom:22px;border:1px solid rgba(215,173,105,.3);color:#d7ad69;font-size:27px}.social-welcome h3{margin:4px 0 8px;font:400 clamp(2rem,4vw,3.3rem)/1.08 var(--display)}.social-welcome>p:last-child{color:#a9b4a7;font-size:.9rem}
+.conversation-head{display:flex;align-items:center;gap:13px;padding:18px 22px;border-bottom:1px solid rgba(218,230,207,.13);background:rgba(20,34,25,.62)}
+.conversation-head h3{margin:0;font:400 1.35rem var(--display)}.conversation-head p{margin:3px 0 0;color:#a9b88f;font:500 .58rem var(--mono);letter-spacing:.12em}.conversation-head button{margin-left:auto;border:1px solid rgba(218,230,207,.2);background:none;color:#c8d1bd;padding:8px 10px;font:.72rem var(--body)}
+.conversation-feed{display:flex;flex:1;flex-direction:column;gap:12px;min-height:390px;max-height:600px;overflow:auto;padding:22px}
+.bubble-row{display:flex;justify-content:flex-start}.bubble-row.mine{justify-content:flex-end}.message-bubble{max-width:min(78%,520px);padding:10px 13px;background:#1b2b20;border:1px solid rgba(218,230,207,.1)}.mine .message-bubble{background:#dfe5d4;color:#182219;border-color:#dfe5d4}.message-author,.message-time{display:block;color:#b7c69b;font-size:.65rem}.mine .message-author,.mine .message-time{color:#52634e}.message-body{margin:5px 0 4px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9rem;line-height:1.5}.message-time{text-align:right;font-size:.58rem;opacity:.8}
+.conversation-compose{display:flex;gap:9px;padding:16px;border-top:1px solid rgba(218,230,207,.13);background:#101b14}.conversation-compose input{flex:1;min-width:0;border:1px solid rgba(218,230,207,.18);border-radius:2px;background:#080f0b;color:#f4f0e6;padding:13px;font:400 .88rem var(--body)}.conversation-compose button{border:0;background:#dfe5d4;color:#172219;padding:0 17px;font:600 .8rem var(--body);cursor:pointer}.conversation-compose button:disabled{opacity:.5}
+.group-modal{position:fixed;z-index:1000;inset:0;display:grid;place-items:center;padding:18px;background:rgba(2,7,4,.78);backdrop-filter:blur(8px)}.group-dialog{position:relative;width:min(100%,440px);max-height:85svh;overflow:auto;padding:30px;background:#132219;border:1px solid rgba(218,230,207,.2);box-shadow:0 30px 100px #000}.group-dialog h3{margin:5px 0 20px;font:400 2rem var(--display)}.group-close{position:absolute;top:13px;right:15px;border:0;background:none;color:#e7eadf;font-size:1.6rem}.group-prompt{margin:18px 0 8px;color:#a9b4a7;font-size:.8rem}.group-friend-choices{display:grid;gap:5px;max-height:220px;overflow:auto;margin-bottom:18px}.group-choice{display:flex;align-items:center;gap:10px;padding:9px;border:1px solid rgba(218,230,207,.1);color:#e8eadf;font-size:.85rem}.group-choice input{width:auto;accent-color:#d7ad69}
+@media(max-width:760px){.social-app{grid-template-columns:minmax(0,1fr);min-height:0}.social-sidebar{border-right:0;border-bottom:1px solid rgba(218,230,207,.14)}.social-list{max-height:190px;min-height:60px}.social-search{margin-top:0}.social-conversation{min-height:560px}.conversation-feed{min-height:340px;max-height:55svh}.social-welcome{min-height:360px;padding:28px}.social-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.social-tab{font-size:.72rem}.people-results{max-height:130px}}
+@media(prefers-reduced-motion:reduce){.social-app *{scroll-behavior:auto!important;transition:none!important}}
+</style>
 </body></html>
 
 <style id="jasmine-editorial-upgrade">
