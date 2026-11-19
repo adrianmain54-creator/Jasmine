@@ -1345,3 +1345,43 @@
   }
   @media(prefers-reduced-motion:reduce) { .brand svg { animation:none!important; } }
 </style>
+
+<style id="jasmine-games-polish">
+  body{background:radial-gradient(ellipse at 50% -10%,rgba(76,112,76,.2),transparent 46rem),#090f0c}
+  .wrap{max-width:1320px;gap:clamp(26px,4vw,52px)}
+  .top{align-items:flex-end;padding:0 0 22px;border-bottom:1px solid rgba(225,232,216,.17)}
+  .brand{gap:clamp(12px,2vw,22px)}
+  .brand svg{width:clamp(48px,6vw,76px);filter:drop-shadow(0 12px 28px rgba(215,173,105,.16))}
+  .brand h1{font-size:clamp(3.5rem,8vw,7rem);letter-spacing:-.065em}
+  .top-right p{max-width:34ch;line-height:1.7}
+  .top-right .shuffle{padding:13px 19px;border-radius:3px;background:#dfe5d4;color:#172219;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+  .top-right .shuffle:hover{background:#f4f0e6;transform:translateY(-2px)}
+  .grid{gap:clamp(11px,1.5vw,19px)}
+  .tile{aspect-ratio:1.08;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15),0 16px 38px rgba(0,0,0,.17);transition:transform .24s ease,box-shadow .24s ease;isolation:isolate}
+  .tile::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(135deg,rgba(255,255,255,.12),transparent 48%)}
+  .tile::after{inset:28% 0 0;background:linear-gradient(0deg,rgba(7,13,9,.46),transparent 88%)}
+  .tile .art{width:96%;right:-7%;top:-11%;transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+  .tile .name{left:18px;bottom:17px;font-size:clamp(1.35rem,2.7vw,1.9rem);letter-spacing:-.04em}
+  .tile .best{left:14px;top:14px;padding:6px 9px;border:1px solid rgba(255,255,255,.16);background:rgba(8,15,10,.22);backdrop-filter:blur(10px)}
+  .tile:hover{transform:translateY(-5px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3),0 24px 48px rgba(0,0,0,.3)}
+  .tile:hover .art{transform:translate(-2%,-2%) rotate(-5deg) scale(1.1)}
+  .tile:active{transform:scale(.98)}
+  .foot{font-size:.82rem;letter-spacing:.015em}
+  .overlay{background:radial-gradient(ellipse at 50% 12%,#203d2b,#080d0b 76%);backdrop-filter:blur(14px)}
+  .back{border:1px solid rgba(243,238,226,.14);border-radius:3px}
+  .scores b{font-size:1.8rem}
+  .board canvas{box-shadow:0 24px 80px rgba(0,0,0,.3)}
+  @media(max-width:680px){
+    body{padding:20px 14px 42px}
+    .top{gap:18px}
+    .brand h1{font-size:clamp(3.3rem,15vw,5rem)}
+    .top-right{width:100%;gap:10px}
+    .grid{gap:10px}
+    .tile{aspect-ratio:.98}
+    .tile .name{left:12px;bottom:12px;font-size:clamp(1.2rem,5.4vw,1.55rem)}
+    .tile .best{left:9px;top:9px;font-size:.65rem}
+    .tile .art{width:100%;right:-9%;top:-10%}
+  }
+  @media(hover:none){.tile:hover{transform:none}.tile:hover .art{transform:none}}
+  @media(prefers-reduced-motion:reduce){.tile,.tile .art{transition:none!important}}
+</style>
