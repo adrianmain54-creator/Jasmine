@@ -545,7 +545,7 @@
   <div class="site-section-head">
     <div><p class="site-kicker">PLAY SOMETHING</p><h2>Minigames</h2><p class="site-sub">Twelve little games, right here on the page.</p></div>
   </div>
-  <iframe class="games-frame" id="gamesFrame" src="minigames.html" title="Minigames collection" scrolling="no" loading="lazy"></iframe>
+  <iframe class="games-frame" id="gamesFrame" data-src="minigames.html" title="Minigames collection" scrolling="no" loading="lazy"></iframe>
 </section>
 <section class="site-section" id="communityChat">
   <div class="site-section-head">
@@ -587,7 +587,12 @@
       frame.style.height=naturalHeight+'px';
     }else if(e.data.type==='mg-close'){document.body.style.overflow='';}
   });
-  frame.addEventListener('load',function(){try{naturalHeight=Math.max(700,frame.contentDocument.documentElement.scrollHeight);frame.style.height=naturalHeight+'px';}catch(e){}});
+  frame.addEventListener('load',function(){if(!frame.dataset.loaded)return;try{naturalHeight=Math.max(700,frame.contentDocument.documentElement.scrollHeight);frame.style.height=naturalHeight+'px';}catch(e){}});
+  function loadGames(){if(frame.dataset.loaded)return;frame.dataset.loaded='true';frame.src=frame.dataset.src;}
+  if('IntersectionObserver' in window){
+    var observer=new IntersectionObserver(function(entries){if(entries[0]&&entries[0].isIntersecting){loadGames();observer.disconnect();}},{rootMargin:'240px 0px'});
+    observer.observe(frame);
+  }else{loadGames();}
 })();
 </script>
 <script type="module">
