@@ -1204,7 +1204,7 @@ const {data:{session}}=await supabase.auth.getSession();if(session?.user)showMem
   /* Keep touch scrolling on the browser compositor; avoid JS-driven smooth-scroll hijacking on iPad. */
   html{scroll-behavior:auto!important;-webkit-text-size-adjust:100%;}
   body{-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;}
-  .social-app,.chat-shell,.chat-auth,.social-conversation{contain:layout paint;}
+  .social-app,.chat-shell,.chat-auth,.social-conversation{contain:layout;}
   .social-list,.people-results,.group-friend-choices,.conversation-feed{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable;}
   .conversation-feed{overflow-anchor:auto;scroll-behavior:auto;}
   .social-list-item,.mini-action,.social-tab,.conversation-compose button{touch-action:manipulation;}
