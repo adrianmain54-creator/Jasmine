@@ -646,6 +646,7 @@ function startRealtime(){
     .subscribe(state=>{if(state==='SUBSCRIBED'&&currentUser)setStatus('COMMUNITY ONLINE');});
 }
 function showMember(user){
+  if(currentUser&&currentUser.id===user.id&&!memberArea.hidden)return;
   currentUser=user;authBox.hidden=true;memberArea.hidden=false;
   const display=(user.user_metadata&&user.user_metadata.display_name)||user.email.split('@')[0];
   accountLabel.textContent='SIGNED IN AS '+display.toUpperCase();
@@ -669,7 +670,7 @@ authForm.addEventListener('submit',async e=>{
       const {data,error}=await supabase.auth.signUp({email,password,options:{data:{display_name:nameInput.value.trim().slice(0,20)}}});
       if(error)throw error;
       if(data.session){setFeedback('Account created. Welcome to Jasmine!');}
-      else{setFeedback('Almost there — check your email for the confirmation link, then come back and log in.');setMode('login');}
+      else{setMode('login');setFeedback('Almost there — check your email for the confirmation link, then come back and log in.');}
     }else{
       const {error}=await supabase.auth.signInWithPassword({email,password});
       if(error)throw error;
