@@ -1596,3 +1596,27 @@
     .stage{height:min(50vh,390px);min-height:160px}
   }
 </style>
+
+<style id="jasmine-game-stage-tighten-v2">
+  /* The previous stage still reserved too much vertical space around smaller boards. */
+  .overlay{gap:4px}
+  .ohead{flex:0 0 auto}
+  .stage{
+    flex:0 0 auto;
+    height:min(46vh,390px);
+    min-height:150px;
+    margin:0;
+    padding:0;
+  }
+  .board{max-height:100%;max-width:100%}
+  .ctrl{flex:0 0 auto;margin:0;padding:0}
+  .hint{flex:0 0 auto;margin:0;min-height:0;line-height:1.2}
+  @media(max-width:680px){
+    .overlay{gap:3px}
+    .stage{height:min(43vh,330px);min-height:140px}
+    .ctrl{gap:6px}
+  }
+  @media(max-height:620px){
+    .stage{height:min(40vh,280px);min-height:120px}
+  }
+</style>
