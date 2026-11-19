@@ -633,6 +633,7 @@ supabase.channel('jasmine-chat-room')
     --petal:#f4f0e6;
     --amber:#d7ad69;
     --mist:#a9b4a7;
+    --butter:#efe3b0;
     --line:rgba(225,232,216,.13);
   }
   html { scroll-behavior:smooth; }
@@ -828,6 +829,17 @@ supabase.channel('jasmine-chat-room')
   @media(prefers-reduced-motion:reduce) {
     html { scroll-behavior:auto; }
     *,*::before,*::after { animation-duration:.01ms!important;transition-duration:.01ms!important; }
+  }
+
+  .chat-send:disabled { opacity:.55; cursor:wait; }
+  .chat-compose input:focus-visible { outline:2px solid #d7bd8b; outline-offset:2px; }
+  .chat-send:focus-visible { outline:2px solid #d7bd8b; outline-offset:3px; }
+  @media(max-width:800px) {
+    .readout .clock { font-size:1.65rem; }
+    .panel .foot { margin-top:2px; }
+  }
+  @media(hover:none) {
+    .shuffle:hover,.chat-send:hover { background:initial; }
   }
 </style>
 
