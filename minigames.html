@@ -282,7 +282,14 @@
     var b = H.get(g.id); bestEl.textContent = b === null ? '-' : fmt(g, b);
     stage.innerHTML = ''; ctrl.innerHTML = ''; hintEl.textContent = g.hint || '';
     host = H.el('div', 'board'); host.tabIndex = -1; stage.appendChild(host); fit();
-    active = {}; inst = g.mount(host, makeApi(g, active)) || {};
+    active = {}; var gameApi = makeApi(g, active); inst = g.mount(host, gameApi) || {};
+    // A consistent tutorial entry point is available in every game.
+    var tutorial = H.el('button', 'btn ghost', 'How to play'); tutorial.type = 'button';
+    tutorial.setAttribute('aria-label', 'How to play ' + g.name);
+    tutorial.addEventListener('click', function () {
+      gameApi.card({ title: 'How to play', sub: g.hint || 'Explore the board and try a round.', button: 'Got it' }, function () {});
+    });
+    ctrl.appendChild(tutorial);
     host.focus({ preventScroll: true });
   }
   function closeGame(silent) {
