@@ -1177,8 +1177,8 @@ const {data:{session}}=await supabase.auth.getSession();if(session?.user)showMem
   if(!frame)return;
   function fit(height){
     var h=Number(height);
-    if(!Number.isFinite(h)||h<400)return;
-    frame.style.height=Math.max(900,Math.min(2600,Math.ceil(h+24)))+'px';
+    if(!Number.isFinite(h)||h<300)return;
+    frame.style.height=Math.max(420,Math.min(1800,Math.ceil(h+18)))+'px';
   }
   frame.addEventListener('load',function(){
     frame.dataset.loaded='true';
@@ -1186,7 +1186,12 @@ const {data:{session}}=await supabase.auth.getSession();if(session?.user)showMem
       var doc=frame.contentDocument;
       if(doc){
         var grid=doc.getElementById('grid');
-        if(grid&&grid.children.length)fit(doc.documentElement.scrollHeight);
+        if(grid&&grid.children.length){
+          var wrap=doc.querySelector('.wrap');
+          var bodyStyle=doc.defaultView.getComputedStyle(doc.body);
+          var natural=wrap?wrap.getBoundingClientRect().bottom+(parseFloat(bodyStyle.paddingBottom)||0)+8:doc.documentElement.scrollHeight;
+          fit(natural);
+        }
         else frame.dataset.loaded='empty';
       }
     }catch(e){}
@@ -1254,4 +1259,9 @@ const {data:{session}}=await supabase.auth.getSession();if(session?.user)showMem
     .title h1 { font-size:clamp(3.8rem,15vw,6rem); }
   }
   @media(prefers-reduced-motion:reduce) { .stage,.panel,.site-section { scroll-behavior:auto; } }
+</style>
+
+<style id="jasmine-compact-game-iframe">
+  .games-frame{height:620px;min-height:0!important}
+  @media(max-width:800px){.games-frame{height:620px;min-height:0!important}}
 </style>
