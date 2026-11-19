@@ -122,7 +122,7 @@
       <h1>Minigames</h1>
     </div>
     <div class="top-right">
-      <p id="count">Twelve quick games. Best scores stay on this device.</p>
+      <p id="count">Fifteen quick games. Best scores stay on this device.</p>
       <button type="button" class="shuffle" id="shuffle">Play something random</button>
     </div>
   </header>
@@ -1176,8 +1176,114 @@
 <script>
 (function () {
   'use strict';
+  var H = window.MG, el = H.el;
+
+  /* ---------- Petal Catch ---------- */
+  H.register({
+    id:'petalcatch',name:'Petal Catch',label:'Caught',ratio:0.75,bg:'#d7dfc9',ink:'#101b16',chip:'rgba(16,27,22,.12)',
+    hint:'Move your basket with your finger. Catch the falling jasmine petals; miss five and the round ends.',
+    art:'<svg viewBox="0 0 100 100"><path d="M18 70Q50 92 82 70L74 88H26Z" fill="#1f4a35"/><g fill="#f3eee2"><ellipse cx="50" cy="26" rx="9" ry="18"/><ellipse cx="50" cy="26" rx="9" ry="18" transform="rotate(72 50 50)"/><ellipse cx="50" cy="26" rx="9" ry="18" transform="rotate(144 50 50)"/><ellipse cx="50" cy="26" rx="9" ry="18" transform="rotate(216 50 50)"/><ellipse cx="50" cy="26" rx="9" ry="18" transform="rotate(288 50 50)"/></g><circle cx="50" cy="50" r="6" fill="#dba847"/></svg>',
+    mount:function(host,api){
+      var W=360,HH=480,g=H.canvas(host,W,HH),ctx=g.ctx,cv=g.cv;
+      var basket=180,petals=[],score=0,miss=0,spawn=0,t=0,ended=false,sp=H.sparks();
+      function reset(){api.clear();basket=180;petals=[];score=miss=spawn=t=0;ended=false;api.score(0);api.hint('Drag left or right to move your basket.');}
+      function finish(){if(ended)return;ended=true;var nb=api.submit(score);api.over({title:score+' petals caught',sub:miss+' petals drifted past',badge:nb&&score?'New best':''},reset);}
+      function pointer(e){basket=H.clamp(cv.pos(e).x,34,W-34);}
+      cv.addEventListener('pointerdown',function(e){pointer(e);});cv.addEventListener('pointermove',function(e){if(e.buttons||e.pointerType!=='mouse')pointer(e);});
+      function update(dt){
+        if(ended)return;t+=dt;spawn+=dt;
+        while(spawn>(Math.max(.28,.72-t*.008))){spawn-=Math.max(.28,.72-t*.008);petals.push({x:18+Math.random()*(W-36),y:-18,v:105+Math.random()*95,r:7+Math.random()*5,a:Math.random()*6.28,w:(Math.random()-.5)*3});}
+        petals.forEach(function(p){p.y+=p.v*dt;p.a+=p.w*dt;});
+        for(var i=petals.length-1;i>=0;i--){var p=petals[i];if(p.y>HH-58&&p.y<HH-20&&Math.abs(p.x-basket)<43){petals.splice(i,1);score++;api.score(score);sp.burst(p.x,p.y,5,['#f3eee2','#dba847','#c9d4b4'],55,.35);}else if(p.y>HH+15){petals.splice(i,1);miss++;if(miss>=5)finish();}}
+        sp.update(dt);
+      }
+      function render(){
+        var gr=ctx.createLinearGradient(0,0,0,HH);gr.addColorStop(0,'#183425');gr.addColorStop(1,'#09120d');ctx.fillStyle=gr;ctx.fillRect(0,0,W,HH);
+        ctx.strokeStyle='rgba(243,238,226,.08)';ctx.lineWidth=1;for(var x=24;x<W;x+=36){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,HH);ctx.stroke();}
+        petals.forEach(function(p){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a);ctx.fillStyle='#f3eee2';ctx.beginPath();ctx.ellipse(0,0,p.r*.62,p.r,0,0,6.283);ctx.fill();ctx.restore();});
+        ctx.fillStyle='#dba847';ctx.beginPath();ctx.ellipse(basket,HH-34,39,8,0,0,6.283);ctx.fill();
+        ctx.fillStyle='#c9d4b4';ctx.beginPath();ctx.moveTo(basket-34,HH-38);ctx.quadraticCurveTo(basket,HH-3,basket+34,HH-38);ctx.lineTo(basket+27,HH-25);ctx.quadraticCurveTo(basket,HH-4,basket-27,HH-25);ctx.closePath();ctx.fill();
+        ctx.fillStyle='#a9b4a7';ctx.font='600 13px Hanken Grotesk,sans-serif';ctx.textAlign='left';ctx.fillText('MISSED  '+miss+'/5',16,26);
+        sp.draw(ctx);
+      }
+      var keys=H.keys({ArrowLeft:function(){basket=Math.max(34,basket-24);},ArrowRight:function(){basket=Math.min(W-34,basket+24);},a:function(){basket=Math.max(34,basket-24);},d:function(){basket=Math.min(W-34,basket+24);}});
+      var loop=H.loop(update,render);reset();
+      return{destroy:function(){ended=true;loop.stop();keys();}};
+    }
+  });
+
+  /* ---------- Vine Dash ---------- */
+  H.register({
+    id:'vinedash',name:'Vine Dash',label:'Distance',ratio:.75,bg:'#8ca77a',ink:'#101b16',chip:'rgba(16,27,22,.12)',
+    hint:'Tap anywhere or press Space to jump over the garden stones. How far can you run?',
+    art:'<svg viewBox="0 0 100 100"><path d="M10 80H90" stroke="#1f4a35" stroke-width="7" stroke-linecap="round"/><path d="M18 78Q30 55 42 76Q56 48 70 76" fill="none" stroke="#dba847" stroke-width="6" stroke-linecap="round"/><path d="M56 24q-12 10 0 21q12-11 0-21Z" fill="#f3eee2"/></svg>',
+    mount:function(host,api){
+      var W=360,HH=480,g=H.canvas(host,W,HH),ctx=g.ctx,cv=g.cv;
+      var ground=390,y=ground,vy=0,obs=[],speed=220,dist=0,score=0,spawn=0,playing=false,dead=false,t=0;
+      function reset(){api.clear();y=ground;vy=0;obs=[];speed=220;dist=score=spawn=t=0;playing=false;dead=false;api.score(0);api.hint('Tap to start, then jump over the stones.');}
+      function jump(){if(dead)return;if(!playing){playing=true;api.hint('');}if(y>=ground-1)vy=-570;}
+      cv.addEventListener('pointerdown',function(e){e.preventDefault();jump();});
+      function finish(){if(dead)return;dead=true;var nb=api.submit(score);api.over({title:score+' steps',sub:'The garden path got you.',badge:nb&&score?'New best':''},reset);}
+      function update(dt){
+        t+=dt;if(!playing||dead)return;dist+=speed*dt;score=Math.floor(dist/32);api.score(score);speed=Math.min(430,220+dist*.025);vy+=1450*dt;y=Math.min(ground,y+vy*dt);if(y>=ground){y=ground;vy=0;}
+        spawn+=dt;var interval=Math.max(.72,1.35-dist/1800);if(spawn>interval){spawn=0;obs.push({x:W+25,w:24+Math.random()*17,h:28+Math.random()*28});}
+        obs.forEach(function(o){o.x-=speed*dt;if(o.x<72&&o.x+o.w>42&&y>ground-o.h+10)finish();});
+        obs=obs.filter(function(o){return o.x>-40;});
+      }
+      function render(){
+        var bg=ctx.createLinearGradient(0,0,0,HH);bg.addColorStop(0,'#142b1e');bg.addColorStop(1,'#284d35');ctx.fillStyle=bg;ctx.fillRect(0,0,W,HH);
+        for(var i=0;i<26;i++){var sx=(i*59-dist*.18)%W;ctx.fillStyle='rgba(243,238,226,.22)';ctx.beginPath();ctx.arc((sx+W)%W,35+(i*37)%270,1.5,0,6.283);ctx.fill();}
+        ctx.fillStyle='#102319';ctx.fillRect(0,ground+14,W,HH-ground);
+        ctx.strokeStyle='#7f9a68';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,ground+14);ctx.lineTo(W,ground+14);ctx.stroke();
+        obs.forEach(function(o){ctx.fillStyle='#dba847';ctx.beginPath();ctx.roundRect?ctx.roundRect(o.x,ground-o.h,o.w,o.h,6):ctx.rect(o.x,ground-o.h,o.w,o.h);ctx.fill();ctx.fillStyle='rgba(255,255,255,.22)';ctx.fillRect(o.x+5,ground-o.h+5,4,o.h-10);});
+        ctx.fillStyle='#f3eee2';ctx.beginPath();ctx.ellipse(58,y-16,17,18,0,0,6.283);ctx.fill();ctx.fillStyle='#dba847';ctx.beginPath();ctx.ellipse(51,y-6,10,5,-.5,0,6.283);ctx.fill();ctx.fillStyle='#101b16';ctx.beginPath();ctx.arc(65,y-20,2.5,0,6.283);ctx.fill();
+        ctx.fillStyle='rgba(243,238,226,.7)';ctx.font='600 13px Hanken Grotesk,sans-serif';ctx.textAlign='right';ctx.fillText('DISTANCE  '+score,W-16,26);
+      }
+      var keys=H.keys({' ':function(){jump();},ArrowUp:function(){jump();},w:function(){jump();}});
+      var loop=H.loop(update,render);reset();
+      return{destroy:function(){dead=true;loop.stop();keys();}};
+    }
+  });
+
+  /* ---------- Garden Match ---------- */
+  H.register({
+    id:'gardenmatch',name:'Garden Match',label:'Score',ratio:1,bg:'#d9dfc8',ink:'#101b16',chip:'rgba(16,27,22,.12)',
+    hint:'Swap neighboring buds to line up three or more. You have 45 seconds.',
+    art:'<svg viewBox="0 0 100 100"><g fill="#1f4a35"><rect x="12" y="12" width="23" height="23" rx="5"/><rect x="39" y="12" width="23" height="23" rx="5"/><rect x="66" y="12" width="23" height="23" rx="5"/><rect x="12" y="39" width="23" height="23" rx="5"/><rect x="39" y="39" width="23" height="23" rx="5"/><rect x="66" y="39" width="23" height="23" rx="5"/></g><g fill="#dba847"><circle cx="23" cy="23" r="6"/><circle cx="50" cy="23" r="6"/><circle cx="77" cy="23" r="6"/><circle cx="23" cy="50" r="6"/><circle cx="50" cy="50" r="6"/><circle cx="77" cy="50" r="6"/></g></svg>',
+    mount:function(host,api){
+      var N=5,icons=['✿','❋','✦','❀','✽'],colors=['#f3eee2','#dba847','#c9d4b4','#a9c5a0','#e7c7a9'];
+      var grid=el('div');grid.style.cssText='display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;width:100%;height:100%;padding:7px;';
+      var cells=[],board=[],selected=-1,score=0,time=45,timer=null,locked=false,finished=false;
+      host.appendChild(grid);
+      function rand(){return H.rint(icons.length);}
+      function matches(){
+        var set={};
+        for(var r=0;r<N;r++)for(var c=0;c<N;c++){var v=board[r][c],a=c,b=c;while(a>0&&board[r][a-1]===v)a--;while(b<N-1&&board[r][b+1]===v)b++;if(b-a>=2)for(var x=a;x<=b;x++)set[r*N+x]=1;
+          a=r;b=r;while(a>0&&board[a-1][c]===v)a--;while(b<N-1&&board[b+1][c]===v)b++;if(b-a>=2)for(var y=a;y<=b;y++)set[y*N+c]=1;
+        }return Object.keys(set).map(Number);
+      }
+      function paint(){cells.forEach(function(c,i){var v=board[Math.floor(i/N)][i%N];c.textContent=icons[v];c.style.background=colors[v];c.style.color='#183022';c.style.outline=i===selected?'3px solid #dba847':'none';});}
+      function settle(){
+        var m=matches(),guard=0;
+        while(m.length&&guard++<12){score+=m.length*10;m.forEach(function(i){board[Math.floor(i/N)][i%N]=-1;});for(var c=0;c<N;c++){var col=[];for(var r=N-1;r>=0;r--)if(board[r][c]>=0)col.push(board[r][c]);while(col.length<N)col.push(rand());for(r=N-1;r>=0;r--)board[r][c]=col[N-1-r];}m=matches();}
+        api.score(score);paint();
+      }
+      function swap(a,b){var ar=Math.floor(a/N),ac=a%N,br=Math.floor(b/N),bc=b%N,v=board[ar][ac];board[ar][ac]=board[br][bc];board[br][bc]=v;}
+      function choose(i){if(locked||finished)return;if(selected<0){selected=i;paint();return;}if(selected===i){selected=-1;paint();return;}var r=Math.floor(selected/N),c=selected%N,rr=Math.floor(i/N),cc=i%N;if(Math.abs(r-rr)+Math.abs(c-cc)!==1){selected=i;paint();return;}var old=selected;selected=-1;swap(old,i);if(!matches().length){swap(old,i);paint();return;}locked=true;settle();locked=false;}
+      cells=Array.from({length:N*N},function(_,i){var b=el('button');b.type='button';b.textContent='✿';b.style.cssText='border:0;border-radius:4px;min-width:0;min-height:0;font:400 clamp(1.4rem,7vw,2.7rem) Georgia,serif;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(16,27,22,.08);touch-action:manipulation;';b.setAttribute('aria-label','Garden tile '+(i+1));b.addEventListener('click',function(){choose(i);});grid.appendChild(b);return b;});
+      function fresh(){api.clear();board=Array.from({length:N},function(){return Array.from({length:N},rand);});while(matches().length)board=Array.from({length:N},function(){return Array.from({length:N},rand);});selected=-1;score=0;time=45;finished=false;locked=false;api.score(0);api.hint('45 seconds. Swap neighboring buds to make a line of three.');paint();clearInterval(timer);timer=setInterval(function(){time--;api.hint(time+' seconds left. Make those matches!');if(time<=0){finished=true;clearInterval(timer);var nb=api.submit(score);api.over({title:score+' points',sub:'Your garden is in bloom.',badge:nb&&score?'New best':''},fresh);}},1000);}
+      var restart=el('button','btn ghost','Restart');restart.type='button';restart.addEventListener('click',fresh);api.ctrl.appendChild(restart);
+      fresh();
+      return{destroy:function(){finished=true;clearInterval(timer);}};
+    }
+  });
+})();
+</script>
+<script>
+(function () {
+  'use strict';
   var H = window.MG, grid = H.$('grid'), tiles = {};
-  var ORDER = ['pairs', 'snake', '2048', 'pattern', 'noughts', 'reflex', 'whack', 'breakout', 'sweeper', 'lightsout', 'flap', 'blocks'];
+  var ORDER = ['pairs', 'snake', '2048', 'pattern', 'noughts', 'reflex', 'whack', 'breakout', 'sweeper', 'lightsout', 'flap', 'blocks', 'petalcatch', 'vinedash', 'gardenmatch'];
   var list = ORDER.map(function (id) { return H.byId[id]; }).filter(Boolean);
 
   function refresh(g) { var b = tiles[g.id].querySelector('.best'); var v = H.fmtBest(g); b.textContent = v ? 'Best ' + v : ''; }
