@@ -621,4 +621,214 @@ supabase.channel('jasmine-chat-room')
   .subscribe(state=>{if(state==='SUBSCRIBED')setStatus('SHARED COMMUNITY CHAT');});
 </script>
 
+
+<style id="jasmine-refinement">
+  /* Jasmine Bloom — botanical editorial refinement.
+     Design credit: Unslop by Damir Sokolovsky (CC BY 4.0). */
+  :root {
+    --night:#090f0c;
+    --ink:#111b15;
+    --leaf:#254a34;
+    --moss:#91a77b;
+    --petal:#f4f0e6;
+    --amber:#d7ad69;
+    --mist:#a9b4a7;
+    --line:rgba(225,232,216,.13);
+  }
+  html { scroll-behavior:smooth; }
+  body {
+    max-width:1600px;
+    margin:0 auto;
+    padding:clamp(16px,3vw,40px);
+    background:
+      radial-gradient(ellipse at 18% 0%, rgba(47,76,53,.18), transparent 38rem),
+      var(--night);
+    line-height:1.6;
+  }
+  .app {
+    min-height:min(780px,calc(100svh - 80px));
+    grid-template-columns:minmax(0,1.65fr) minmax(270px,.72fr);
+    gap:clamp(20px,3vw,44px);
+    margin-bottom:clamp(64px,9vw,112px);
+    align-items:stretch;
+  }
+  .stage {
+    min-height:620px;
+    border:1px solid rgba(221,230,211,.16);
+    border-radius:3px;
+    background:#0c1510;
+    box-shadow:0 28px 80px rgba(0,0,0,.22);
+    isolation:isolate;
+  }
+  .stage::after {
+    height:54%;
+    background:linear-gradient(0deg,rgba(7,13,9,.92),rgba(7,13,9,.42) 48%,transparent);
+  }
+  .title { left:clamp(24px,4vw,56px); bottom:clamp(26px,4vw,52px); }
+  .title h1 {
+    font-size:clamp(3.8rem,8vw,7.5rem);
+    letter-spacing:-.045em;
+    line-height:.88;
+  }
+  .title p {
+    margin-top:18px;
+    max-width:34ch;
+    font:400 .88rem/1.5 var(--body);
+    letter-spacing:.015em;
+    text-transform:none;
+    color:rgba(244,240,230,.72);
+  }
+  .readout { top:clamp(22px,3vw,38px); right:clamp(22px,3vw,38px); }
+  .readout .clock { font-size:clamp(1.8rem,3vw,2.35rem); letter-spacing:-.04em; }
+  .readout .state {
+    margin-top:5px;
+    font:500 .72rem/1.3 var(--body);
+    letter-spacing:.04em;
+    text-transform:none;
+    color:#d7bd8b;
+  }
+  .panel {
+    justify-content:center;
+    gap:30px;
+    padding:clamp(20px,2.5vw,34px) 0;
+    overflow:visible;
+  }
+  .panel h2 {
+    padding:0 0 16px;
+    font:400 1.55rem/1.2 var(--display);
+    letter-spacing:-.02em;
+    text-transform:none;
+    color:var(--petal);
+    border-bottom:1px solid var(--line);
+  }
+  .ctl { gap:12px; }
+  .ctl .row { align-items:center; }
+  .ctl label,.ctl legend { font-size:.98rem; }
+  .ctl output { color:#dfc18b; font-size:.82rem; }
+  .hint,.foot { color:#a9b4a7; line-height:1.65; }
+  input[type=range] { height:32px; }
+  input[type=range]::-webkit-slider-runnable-track,
+  input[type=range]::-moz-range-track { height:3px; }
+  input[type=range]::-webkit-slider-thumb {
+    width:20px;height:20px;margin-top:-8.5px;
+    background:var(--petal);border:4px solid #17231a;
+    box-shadow:0 0 0 1px rgba(244,240,230,.8);
+  }
+  .seg { gap:8px; }
+  .seg label {
+    margin:0;
+    padding:12px 0;
+    border:1px solid var(--line);
+    border-radius:2px!important;
+    font:500 .88rem/1 var(--body);
+    transition:background .18s ease,border-color .18s ease,color .18s ease;
+  }
+  .seg input:checked + label {
+    background:#dfe5d4;
+    border-color:#dfe5d4;
+    color:#142017;
+  }
+  .shuffle {
+    padding:16px 17px;
+    border:1px solid rgba(223,229,212,.58);
+    border-radius:2px;
+    transition:background .18s ease,color .18s ease,transform .18s ease;
+  }
+  .shuffle:active { transform:scale(.985); }
+  .shuffle span { font-size:.7rem; }
+  .shuffle:hover { background:var(--petal); }
+  .site-section {
+    max-width:1240px;
+    margin:0 auto clamp(68px,9vw,112px);
+  }
+  .site-section-head { margin-bottom:24px; }
+  .site-kicker {
+    color:#a9b88f;
+    font:500 .7rem/1.4 var(--mono);
+    letter-spacing:.1em;
+  }
+  .site-section h2 {
+    font-size:clamp(2.4rem,5vw,4rem);
+    letter-spacing:-.035em;
+  }
+  .site-sub { color:#a9b4a7; font-size:.96rem; }
+  .games-frame {
+    border:1px solid rgba(221,230,211,.15);
+    border-radius:3px;
+    box-shadow:0 24px 70px rgba(0,0,0,.18);
+  }
+  .chat-shell {
+    border:1px solid rgba(221,230,211,.16);
+    border-radius:3px;
+    background:linear-gradient(145deg,#142219,#0d1510);
+  }
+  .chat-top { padding:22px 24px; }
+  .chat-title { font-size:1.85rem; letter-spacing:-.025em; }
+  .chat-meta { color:#a9b88f; letter-spacing:.07em; }
+  .chat-feed { padding:24px; gap:20px; }
+  .chat-avatar {
+    width:38px;height:38px;border-radius:2px;
+    background:#294a35;
+  }
+  .chat-compose { padding:18px 20px 20px; }
+  .chat-compose input {
+    border-radius:2px;
+    border-color:rgba(221,230,211,.16);
+    background:#0a120d;
+    padding:14px;
+  }
+  .chat-compose input:focus { border-color:#b6c49e; }
+  .chat-send {
+    border-radius:2px;
+    background:#d9dfce;
+    color:#142017;
+    font-weight:600;
+    transition:background .18s ease,transform .18s ease;
+  }
+  .chat-send:hover { background:#f4f0e6; }
+  .chat-send:active { transform:scale(.97); }
+  :where(button,input,a):focus-visible {
+    outline:2px solid #d7bd8b;
+    outline-offset:3px;
+  }
+  @media(max-width:800px) {
+    body { padding:12px max(14px,env(safe-area-inset-right)) 28px max(14px,env(safe-area-inset-left)); }
+    .app {
+      min-height:0;
+      grid-template-columns:minmax(0,1fr);
+      gap:22px;
+      margin-bottom:68px;
+    }
+    .stage { height:min(72svh,680px); min-height:430px; }
+    .panel {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:22px 18px;
+      padding:8px 2px 0;
+    }
+    .panel h2,.panel .foot { grid-column:1/-1; }
+    .panel h2 { padding-bottom:12px; }
+    .panel .ctl:nth-of-type(1) { grid-column:1/-1; }
+    .panel .shuffle { grid-column:1/-1; }
+    .title { left:22px;bottom:24px; }
+    .title h1 { font-size:clamp(3.6rem,15vw,6rem); }
+    .title p { font-size:.82rem; }
+    .site-section { margin-bottom:68px; }
+    .site-section-head { margin-bottom:20px; }
+    .games-frame { height:1450px; }
+    .chat-top { padding:18px; }
+    .chat-feed { padding:18px; }
+    .chat-compose { padding:14px; }
+  }
+  @media(max-width:390px) {
+    .panel { grid-template-columns:minmax(0,1fr); }
+    .panel h2,.panel .foot,.panel .ctl:nth-of-type(1),.panel .shuffle { grid-column:1; }
+    .stage { min-height:400px; }
+  }
+  @media(prefers-reduced-motion:reduce) {
+    html { scroll-behavior:auto; }
+    *,*::before,*::after { animation-duration:.01ms!important;transition-duration:.01ms!important; }
+  }
+</style>
+
 </body></html>
