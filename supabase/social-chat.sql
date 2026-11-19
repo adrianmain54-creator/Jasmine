@@ -173,21 +173,3 @@ grant execute on function public.jasmine_create_conversation(text,boolean,uuid[]
 grant execute on function public.jasmine_is_conversation_member(uuid) to authenticated;
 grant execute on function public.jasmine_are_friends(uuid,uuid) to authenticated;
 revoke all on public.profiles, public.friend_requests, public.friendships, public.conversations, public.conversation_members, public.messages from anon;
-
-
--- Enable Supabase Realtime for the social features. Safe to run more than once.
-do $$
-begin
-  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='messages') then
-    alter publication supabase_realtime add table public.messages;
-  end if;
-  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='friend_requests') then
-    alter publication supabase_realtime add table public.friend_requests;
-  end if;
-  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='friendships') then
-    alter publication supabase_realtime add table public.friendships;
-  end if;
-  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='conversation_members') then
-    alter publication supabase_realtime add table public.conversation_members;
-  end if;
-end $$;
