@@ -1219,6 +1219,7 @@
   function stopBg() { if (bgRaf) cancelAnimationFrame(bgRaf); bgRaf = 0; }
   if ('IntersectionObserver' in window) new IntersectionObserver(function(entries){bgVisible=!!(entries[0]&&entries[0].isIntersecting);if(bgVisible)startBg();else stopBg();},{threshold:0}).observe(bg);
   document.addEventListener('visibilitychange',function(){if(document.hidden)stopBg();else startBg();});
+  window.addEventListener('message',function(e){if(e.origin!==location.origin||!e.data||e.data.type!=='mg-visibility')return;bgVisible=!!e.data.visible;if(bgVisible)startBg();else stopBg();});
   window.addEventListener('resize', size); size(); startBg();
   H.route();
 })();
