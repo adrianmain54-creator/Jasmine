@@ -1220,6 +1220,54 @@ const {data:{session}}=await supabase.auth.getSession();if(session?.user)showMem
   @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}.tile,.tile .art,.auth-submit,.chat-send{transition:none!important}}
 </style>
 
+
+</body></html>
+
+<style id="jasmine-editorial-upgrade">
+  /* A sharper, more botanical editorial system — fewer generic glass panels. */
+  body { background:radial-gradient(ellipse at 16% 0%,rgba(75,105,67,.16),transparent 38rem),#080e0b; }
+  .app { max-width:1540px; grid-template-columns:minmax(0,1.72fr) minmax(285px,.68fr); gap:clamp(18px,2.4vw,34px); }
+  .stage { border-radius:3px; min-height:clamp(560px,72svh,790px); border-color:rgba(218,230,207,.2); box-shadow:0 26px 72px rgba(0,0,0,.3); }
+  .stage::before { content:"JASMINE BLOOM     /     A LIVING STUDY"; position:absolute;z-index:3;top:24px;left:26px;color:rgba(231,237,222,.68);font:500 .62rem/1 var(--mono);letter-spacing:.13em;pointer-events:none; }
+  .stage::after { height:62%;background:linear-gradient(0deg,rgba(5,11,7,.94),rgba(5,11,7,.25) 58%,transparent); }
+  .title { left:clamp(24px,4vw,58px);bottom:clamp(28px,4vw,54px); }
+  .title h1 { font-size:clamp(4.3rem,9vw,8rem);letter-spacing:-.065em; }
+  .title p { max-width:34ch;font-size:.9rem; }
+  .readout { border-radius:3px;background:rgba(8,15,10,.58);border-color:rgba(218,230,207,.19);backdrop-filter:blur(8px); }
+  .panel { border-radius:3px;background:#101b14;border:1px solid rgba(218,230,207,.16);box-shadow:0 24px 60px rgba(0,0,0,.22);padding:clamp(22px,2.2vw,32px);gap:24px; }
+  .panel h2 { font-size:1.8rem;border-bottom-color:rgba(218,230,207,.2); }
+  .panel h2::before { width:5px;height:22px;border-radius:0;background:#b7c69b;box-shadow:none; }
+  .ctl { border-top-color:rgba(218,230,207,.12); }
+  .ctl output { border-radius:2px;background:rgba(215,173,105,.09); }
+  .seg { gap:6px; }
+  .seg label { border-radius:2px!important;background:rgba(255,255,255,.025); }
+  .shuffle { border-radius:2px;background:#dfe5d4;color:#152117;border-color:#dfe5d4; }
+  .shuffle span { color:#53634e; }
+  .shuffle:hover { background:#f4f0e6;color:#101b16; }
+  .site-section { max-width:1320px; }
+  .site-section-head { padding-bottom:16px;border-bottom:1px solid rgba(218,230,207,.14); }
+  .site-kicker { color:#bdc99e; }
+  .games-frame { border-radius:3px; }
+  .chat-auth,.chat-shell { border-radius:3px; }
+  .chat-auth { background:linear-gradient(115deg,#17291c,#0d1710); }
+  .chat-auth-form { border-radius:3px;background:rgba(4,10,6,.35); }
+  .auth-field input,.auth-submit,.chat-signout,.chat-compose input,.chat-send { border-radius:2px; }
+  .chat-feed { scrollbar-color:#52664e #101a13; }
+  @media(max-width:800px) {
+    .app { grid-template-columns:minmax(0,1fr); }
+    .stage { min-height:460px;height:min(72svh,680px); }
+    .stage::before { top:18px;left:18px;font-size:.53rem; }
+    .panel { padding:22px 20px; }
+    .title h1 { font-size:clamp(3.8rem,15vw,6rem); }
+  }
+  @media(prefers-reduced-motion:reduce) { .stage,.panel,.site-section { scroll-behavior:auto; } }
+</style>
+
+<style id="jasmine-compact-game-iframe">
+  .games-frame{height:620px;min-height:0!important}
+  @media(max-width:800px){.games-frame{height:620px;min-height:0!important}}
+</style>
+
 <style id="jasmine-bloom-ui-overhaul-2026">
 :root{--night:#080e0b;--panel:#101a14;--panel2:#142219;--line:rgba(225,235,219,.13);--mist:#aab9aa;--petal:#f4f1e8;--amber:#d8b477;--moss:#8ca77d}
 html{scroll-behavior:smooth}
@@ -1315,49 +1363,19 @@ button:focus-visible{outline:2px solid var(--amber)!important;outline-offset:3px
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.shuffle,.auth-submit,.tile{transition:none!important}}
 </style>
-</body></html>
 
-<style id="jasmine-editorial-upgrade">
-  /* A sharper, more botanical editorial system — fewer generic glass panels. */
-  body { background:radial-gradient(ellipse at 16% 0%,rgba(75,105,67,.16),transparent 38rem),#080e0b; }
-  .app { max-width:1540px; grid-template-columns:minmax(0,1.72fr) minmax(285px,.68fr); gap:clamp(18px,2.4vw,34px); }
-  .stage { border-radius:3px; min-height:clamp(560px,72svh,790px); border-color:rgba(218,230,207,.2); box-shadow:0 26px 72px rgba(0,0,0,.3); }
-  .stage::before { content:"JASMINE BLOOM     /     A LIVING STUDY"; position:absolute;z-index:3;top:24px;left:26px;color:rgba(231,237,222,.68);font:500 .62rem/1 var(--mono);letter-spacing:.13em;pointer-events:none; }
-  .stage::after { height:62%;background:linear-gradient(0deg,rgba(5,11,7,.94),rgba(5,11,7,.25) 58%,transparent); }
-  .title { left:clamp(24px,4vw,58px);bottom:clamp(28px,4vw,54px); }
-  .title h1 { font-size:clamp(4.3rem,9vw,8rem);letter-spacing:-.065em; }
-  .title p { max-width:34ch;font-size:.9rem; }
-  .readout { border-radius:3px;background:rgba(8,15,10,.58);border-color:rgba(218,230,207,.19);backdrop-filter:blur(8px); }
-  .panel { border-radius:3px;background:#101b14;border:1px solid rgba(218,230,207,.16);box-shadow:0 24px 60px rgba(0,0,0,.22);padding:clamp(22px,2.2vw,32px);gap:24px; }
-  .panel h2 { font-size:1.8rem;border-bottom-color:rgba(218,230,207,.2); }
-  .panel h2::before { width:5px;height:22px;border-radius:0;background:#b7c69b;box-shadow:none; }
-  .ctl { border-top-color:rgba(218,230,207,.12); }
-  .ctl output { border-radius:2px;background:rgba(215,173,105,.09); }
-  .seg { gap:6px; }
-  .seg label { border-radius:2px!important;background:rgba(255,255,255,.025); }
-  .shuffle { border-radius:2px;background:#dfe5d4;color:#152117;border-color:#dfe5d4; }
-  .shuffle span { color:#53634e; }
-  .shuffle:hover { background:#f4f0e6;color:#101b16; }
-  .site-section { max-width:1320px; }
-  .site-section-head { padding-bottom:16px;border-bottom:1px solid rgba(218,230,207,.14); }
-  .site-kicker { color:#bdc99e; }
-  .games-frame { border-radius:3px; }
-  .chat-auth,.chat-shell { border-radius:3px; }
-  .chat-auth { background:linear-gradient(115deg,#17291c,#0d1710); }
-  .chat-auth-form { border-radius:3px;background:rgba(4,10,6,.35); }
-  .auth-field input,.auth-submit,.chat-signout,.chat-compose input,.chat-send { border-radius:2px; }
-  .chat-feed { scrollbar-color:#52664e #101a13; }
-  @media(max-width:800px) {
-    .app { grid-template-columns:minmax(0,1fr); }
-    .stage { min-height:460px;height:min(72svh,680px); }
-    .stage::before { top:18px;left:18px;font-size:.53rem; }
-    .panel { padding:22px 20px; }
-    .title h1 { font-size:clamp(3.8rem,15vw,6rem); }
-  }
-  @media(prefers-reduced-motion:reduce) { .stage,.panel,.site-section { scroll-behavior:auto; } }
-</style>
-
-<style id="jasmine-compact-game-iframe">
-  .games-frame{height:620px;min-height:0!important}
-  @media(max-width:800px){.games-frame{height:620px;min-height:0!important}}
+<style id="jasmine-visible-refresh-v2">
+body{background:#080e0b!important}
+.app{max-width:1540px!important;grid-template-columns:minmax(0,1.7fr) minmax(285px,.7fr)!important;gap:28px!important}
+.stage{min-height:clamp(560px,72svh,790px)!important;border-radius:5px!important;box-shadow:0 30px 90px rgba(0,0,0,.42)!important}
+.panel{background:linear-gradient(150deg,#17271c,#0d1710)!important;border:1px solid rgba(225,235,219,.22)!important;border-radius:5px!important;padding:28px!important;gap:24px!important}
+.panel h2{font:400 1.7rem/1.15 var(--display)!important;letter-spacing:-.025em!important;color:#f4f1e8!important;text-transform:none!important}
+.panel .ctl{padding:7px 0 12px!important;border-bottom:1px solid rgba(225,235,219,.1)}
+.shuffle{background:#dfe5d4!important;color:#152117!important;border-radius:4px!important;min-height:48px!important}
+.site-section{max-width:1320px!important}
+.site-section h2{font-size:clamp(2.3rem,4vw,3.8rem)!important}
+.games-frame{border:1px solid rgba(225,235,219,.2)!important;border-radius:5px!important}
+.chat-auth,.social-app{border-radius:5px!important;border-color:rgba(225,235,219,.22)!important}
+@media(max-width:800px){.app{display:flex!important;flex-direction:column!important;gap:14px!important}.stage{height:min(68svh,600px)!important;min-height:360px!important}.panel{padding:20px!important;gap:18px!important}}
+@media(max-width:420px){.stage{min-height:330px!important}.panel{padding:16px!important}}
 </style>
