@@ -542,14 +542,30 @@
   <div class="site-section-head">
     <div><p class="site-kicker">AFTER THE GAME</p><h2>Community chat</h2><p class="site-sub">Say hello, share a score, or find someone to play with.</p></div>
   </div>
-  <div class="chat-shell">
-    <div class="chat-top"><div><h3 class="chat-title">The Minigames Lounge</h3><p class="chat-meta">COMMUNITY BOARD</p></div><span class="chat-meta" id="chatStatus">CONNECTING…</span></div>
-    <div class="chat-feed" id="chatFeed" aria-live="polite"><p class="chat-empty" id="chatEmpty">No messages yet. Start the conversation.</p></div>
-    <form class="chat-compose" id="chatForm">
-      <div class="chat-compose-row"><input id="chatName" maxlength="20" value="Player" aria-label="Your name" placeholder="Your name"></div>
-      <div class="chat-compose-row"><input id="chatInput" maxlength="500" autocomplete="off" aria-label="Message" placeholder="Write a message..." required><button class="chat-send" type="submit">Send</button></div>
-      <p class="chat-note">Messages are shared live with everyone visiting Jasmine.</p>
+  <div class="chat-auth" id="chatAuth">
+    <div class="chat-auth-copy"><span class="chat-auth-mark">✳</span><p class="site-kicker">THE JASMINE COMMUNITY</p><h3 id="authHeading">A little corner to connect.</h3><p>Sign in or create an account to join the conversation, share scores, and meet other players.</p></div>
+    <form class="chat-auth-form" id="authForm">
+      <div class="auth-tabs" role="tablist" aria-label="Account access">
+        <button type="button" class="auth-tab active" id="authLoginTab" aria-selected="true">Log in</button>
+        <button type="button" class="auth-tab" id="authSignupTab" aria-selected="false">Create account</button>
+      </div>
+      <label class="auth-field" id="authNameField" hidden><span>Display name</span><input id="authName" maxlength="20" autocomplete="nickname" placeholder="How should we call you?"></label>
+      <label class="auth-field"><span>Email</span><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required></label>
+      <label class="auth-field"><span>Password</span><input id="authPassword" type="password" minlength="8" autocomplete="current-password" placeholder="At least 8 characters" required></label>
+      <button class="auth-submit" id="authSubmit" type="submit">Log in</button>
+      <p class="auth-feedback" id="authFeedback" role="status" aria-live="polite">Your account keeps your chat identity yours.</p>
     </form>
+  </div>
+  <div id="chatMemberArea" hidden>
+    <div class="chat-account-bar"><span class="chat-account-label" id="chatAccountLabel">SIGNED IN</span><button type="button" class="chat-signout" id="chatSignOut">Log out</button></div>
+    <div class="chat-shell">
+      <div class="chat-top"><div><h3 class="chat-title">The Minigames Lounge</h3><p class="chat-meta">COMMUNITY BOARD</p></div><span class="chat-meta" id="chatStatus">CONNECTING…</span></div>
+      <div class="chat-feed" id="chatFeed" aria-live="polite"><p class="chat-empty" id="chatEmpty">No messages yet. Start the conversation.</p></div>
+      <form class="chat-compose" id="chatForm">
+        <div class="chat-compose-row"><input id="chatInput" maxlength="500" autocomplete="off" aria-label="Message" placeholder="Write a message..." required><button class="chat-send" type="submit">Send</button></div>
+        <p class="chat-note">Posting as your account. Be kind to the garden.</p>
+      </form>
+    </div>
   </div>
 </section>
 <script>
@@ -571,23 +587,42 @@ const supabase = createClient(
   'https://jkossymjujldzsmxyutq.supabase.co',
   'sb_publishable_a9aZehf-5egAc3GUg0BA_g_xtEcnv0q'
 );
-const feed=document.getElementById('chatFeed');
-const empty=document.getElementById('chatEmpty');
-const form=document.getElementById('chatForm');
-const nameInput=document.getElementById('chatName');
-const messageInput=document.getElementById('chatInput');
-const status=document.getElementById('chatStatus');
-let messages=[];
+const $ = id => document.getElementById(id);
+const authBox=$('chatAuth'), memberArea=$('chatMemberArea'), authForm=$('authForm');
+const authFeedback=$('authFeedback'), authSubmit=$('authSubmit');
+const nameField=$('authNameField'), nameInput=$('authName'), emailInput=$('authEmail'), passwordInput=$('authPassword');
+const feed=$('chatFeed'), empty=$('chatEmpty'), form=$('chatForm'), messageInput=$('chatInput');
+const status=$('chatStatus'), accountLabel=$('chatAccountLabel');
+let mode='login', currentUser=null, messages=[], channel=null, busy=false;
+
+function setFeedback(message,isError=false){authFeedback.textContent=message;authFeedback.classList.toggle('error',isError);}
 function setStatus(value){if(status)status.textContent=value;}
+function setMode(next){
+  mode=next;
+  const signup=mode==='signup';
+  $('authLoginTab').classList.toggle('active',!signup);
+  $('authSignupTab').classList.toggle('active',signup);
+  $('authLoginTab').setAttribute('aria-selected',String(!signup));
+  $('authSignupTab').setAttribute('aria-selected',String(signup));
+  nameField.hidden=!signup;
+  nameInput.required=signup;
+  passwordInput.autocomplete=signup?'new-password':'current-password';
+  $('authHeading').textContent=signup?'Make yourself at home.':'A little corner to connect.';
+  authSubmit.textContent=signup?'Create account':'Log in';
+  setFeedback(signup?'Create an account to join the Jasmine community.':'Welcome back. Your garden is waiting.');
+}
+$('authLoginTab').addEventListener('click',()=>setMode('login'));
+$('authSignupTab').addEventListener('click',()=>setMode('signup'));
+
 function render(){
   feed.innerHTML='';
   if(!messages.length){feed.appendChild(empty);return;}
-  messages.slice(-100).forEach(function(m){
+  messages.slice(-100).forEach(m=>{
     const row=document.createElement('div');row.className='chat-message';
     const avatar=document.createElement('div');avatar.className='chat-avatar';avatar.textContent=(m.name||'P').slice(0,1).toUpperCase();
     const main=document.createElement('div');main.className='chat-msg-main';
     const head=document.createElement('div');head.className='chat-msg-head';
-    const who=document.createElement('span');who.className='chat-msg-name';who.textContent=m.name;
+    const who=document.createElement('span');who.className='chat-msg-name';who.textContent=m.name||'Jasmine member';
     const when=document.createElement('span');when.className='chat-msg-time';when.textContent=new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
     const body=document.createElement('p');body.className='chat-msg-text';body.textContent=m.message;
     head.append(who,when);main.append(head,body);row.append(avatar,main);feed.appendChild(row);
@@ -595,30 +630,80 @@ function render(){
   feed.scrollTop=feed.scrollHeight;
 }
 async function loadMessages(){
+  if(!currentUser)return;
+  setStatus('LOADING CHAT…');
   const {data,error}=await supabase.from('chat_messages').select('id,name,message,created_at').order('created_at',{ascending:true}).limit(100);
-  if(error){setStatus('CHAT CONNECTION ERROR');console.error('Supabase chat load:',error);return;}
-  messages=data||[];render();setStatus('SHARED COMMUNITY CHAT');
+  if(error){setStatus('CHAT UNAVAILABLE');console.error('Supabase chat load:',error);return;}
+  messages=data||[];render();setStatus('COMMUNITY ONLINE');
 }
-form.addEventListener('submit',async function(e){
+function startRealtime(){
+  if(channel)supabase.removeChannel(channel);
+  channel=supabase.channel('jasmine-chat-room-auth')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},payload=>{
+      if(!currentUser||messages.some(m=>m.id===payload.new.id))return;
+      messages.push(payload.new);messages=messages.slice(-100);render();
+    })
+    .subscribe(state=>{if(state==='SUBSCRIBED'&&currentUser)setStatus('COMMUNITY ONLINE');});
+}
+function showMember(user){
+  currentUser=user;authBox.hidden=true;memberArea.hidden=false;
+  const display=(user.user_metadata&&user.user_metadata.display_name)||user.email.split('@')[0];
+  accountLabel.textContent='SIGNED IN AS '+display.toUpperCase();
+  messages=[];render();loadMessages();startRealtime();
+}
+function showGuest(){
+  currentUser=null;
+  if(channel){supabase.removeChannel(channel);channel=null;}
+  messages=[];authBox.hidden=false;memberArea.hidden=true;
+  setStatus('SIGN IN REQUIRED');
+  if(feed)render();
+}
+authForm.addEventListener('submit',async e=>{
+  e.preventDefault();if(busy)return;
+  const email=emailInput.value.trim(),password=passwordInput.value;
+  if(!email||!password)return;
+  if(mode==='signup'&&nameInput.value.trim().length<2){setFeedback('Please choose a display name with at least 2 characters.',true);return;}
+  busy=true;authSubmit.disabled=true;authSubmit.textContent=mode==='signup'?'Creating account…':'Logging in…';
+  try{
+    if(mode==='signup'){
+      const {data,error}=await supabase.auth.signUp({email,password,options:{data:{display_name:nameInput.value.trim().slice(0,20)}}});
+      if(error)throw error;
+      if(data.session){setFeedback('Account created. Welcome to Jasmine!');}
+      else{setFeedback('Almost there — check your email for the confirmation link, then come back and log in.');setMode('login');}
+    }else{
+      const {error}=await supabase.auth.signInWithPassword({email,password});
+      if(error)throw error;
+      setFeedback('You’re in. Welcome back!');
+    }
+  }catch(error){setFeedback(error.message||'Could not complete that request. Please try again.',true);}
+  finally{busy=false;authSubmit.disabled=false;authSubmit.textContent=mode==='signup'?'Create account':'Log in';}
+});
+$('chatSignOut').addEventListener('click',async()=>{
+  $('chatSignOut').disabled=true;
+  const {error}=await supabase.auth.signOut();
+  $('chatSignOut').disabled=false;
+  if(error){setStatus('LOG OUT FAILED');console.error(error);}
+});
+form.addEventListener('submit',async e=>{
   e.preventDefault();
   const message=messageInput.value.trim();
-  const username=nameInput.value.trim().slice(0,20)||'Player';
-  if(!message)return;
+  if(!message||!currentUser)return;
   const button=form.querySelector('button[type="submit"]');
   button.disabled=true;setStatus('SENDING…');
-  const {data,error}=await supabase.from('chat_messages').insert({name:username,message}).select('id,name,message,created_at').single();
+  const display=(currentUser.user_metadata&&currentUser.user_metadata.display_name)||currentUser.email.split('@')[0];
+  const {data,error}=await supabase.from('chat_messages').insert({name:display.slice(0,20),message,user_id:currentUser.id}).select('id,name,message,created_at').single();
   button.disabled=false;
-  if(error){setStatus('MESSAGE NOT SENT — TRY AGAIN');console.error('Supabase chat insert:',error);return;}
+  if(error){setStatus('MESSAGE NOT SENT');console.error('Supabase chat insert:',error);return;}
   messageInput.value='';
   if(!messages.some(m=>m.id===data.id)){messages.push(data);messages=messages.slice(-100);render();}
-  setStatus('SHARED COMMUNITY CHAT');messageInput.focus();
+  setStatus('COMMUNITY ONLINE');messageInput.focus();
 });
-loadMessages();
-supabase.channel('jasmine-chat-room')
-  .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},payload=>{
-    if(!messages.some(m=>m.id===payload.new.id)){messages.push(payload.new);messages=messages.slice(-100);render();}
-  })
-  .subscribe(state=>{if(state==='SUBSCRIBED')setStatus('SHARED COMMUNITY CHAT');});
+supabase.auth.onAuthStateChange((event,session)=>{
+  if(session?.user){showMember(session.user);}
+  else if(event==='SIGNED_OUT'||event==='INITIAL_SESSION'){showGuest();}
+});
+const {data:{session}}=await supabase.auth.getSession();
+if(session?.user)showMember(session.user);else showGuest();
 </script>
 
 
@@ -843,4 +928,30 @@ supabase.channel('jasmine-chat-room')
   }
 </style>
 
+
+<style id="jasmine-chat-auth">
+  .chat-auth{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,390px);gap:clamp(24px,5vw,64px);align-items:center;padding:clamp(24px,5vw,52px);border:1px solid var(--line);background:radial-gradient(ellipse at 12% 20%,rgba(77,112,77,.22),transparent 52%),linear-gradient(145deg,#14251b,#0b1510);border-radius:8px}
+  .chat-auth-copy{max-width:440px}.chat-auth-mark{display:grid;place-items:center;width:48px;height:48px;border:1px solid rgba(243,238,226,.2);border-radius:50%;font-size:1.45rem;color:var(--amber);margin-bottom:24px}
+  .chat-auth-copy h3{font:400 clamp(2rem,4vw,3.25rem)/1.05 var(--display);letter-spacing:-.025em;margin:0 0 14px;max-width:12ch}
+  .chat-auth-copy>p:last-child{color:var(--mist);max-width:38ch;margin:0;font-size:.94rem}
+  .chat-auth-form{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .auth-tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line);margin-bottom:4px}
+  .auth-tab{border:0;border-bottom:2px solid transparent;background:none;color:var(--mist);padding:12px 8px;font:500 .9rem var(--body);cursor:pointer}
+  .auth-tab.active{color:var(--petal);border-bottom-color:var(--amber)}
+  .auth-field{display:flex;flex-direction:column;gap:7px;color:var(--mist);font-size:.78rem}
+  .auth-field input{width:100%;min-width:0;background:#09110c;color:var(--petal);border:1px solid var(--line);border-radius:4px;padding:13px 14px;font:400 .92rem var(--body);outline:none}
+  .auth-field input:focus{border-color:var(--amber)}
+  .auth-submit{width:100%;border:0;border-radius:4px;background:var(--amber);color:var(--night);padding:14px 18px;font:600 .95rem var(--body);cursor:pointer;transition:background .16s,transform .16s}
+  .auth-submit:hover{background:var(--butter);transform:translateY(-1px)}
+  .auth-submit:disabled{opacity:.65;cursor:wait;transform:none}
+  .auth-feedback{min-height:2.6em;margin:0;color:var(--mist);font-size:.76rem;line-height:1.5}
+  .auth-feedback.error{color:#e4a18f}
+  .chat-account-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+  .chat-account-label{font:400 .68rem var(--mono);letter-spacing:.08em;color:var(--moss);overflow-wrap:anywhere}
+  .chat-signout{background:transparent;color:var(--mist);border:1px solid var(--line);border-radius:4px;padding:8px 12px;font:500 .78rem var(--body);cursor:pointer}
+  .chat-signout:hover{border-color:var(--amber);color:var(--petal)}
+  [hidden]{display:none!important}
+  .auth-tab:focus-visible,.auth-submit:focus-visible,.chat-signout:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+  @media(max-width:700px){.chat-auth{grid-template-columns:1fr;gap:28px;padding:24px 20px}.chat-auth-mark{margin-bottom:16px}.chat-auth-copy h3{max-width:15ch}.chat-account-label{font-size:.58rem}}
+</style>
 </body></html>
