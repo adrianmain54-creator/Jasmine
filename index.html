@@ -438,7 +438,7 @@
     py += (ty - py) * (1 - Math.exp(-dt * 4));
     windAmp = reduce ? 0 : 0.05 + state.wind * 0.055 + gust * 0.35;
   }
-  var stageVisible = true, pageVisible = !document.hidden, raf = 0;
+  var stageVisible = true, pageVisible = !document.hidden, raf = 0, lastPaint = 0;
   var frameInterval = window.matchMedia && window.matchMedia('(pointer: coarse)').matches ? 1000 / 30 : 1000 / 45;
   function startLoop() { if (!reduce && pageVisible && stageVisible && !raf) { last = performance.now(); raf = requestAnimationFrame(loop); } }
   function stopLoop() { if (raf) { cancelAnimationFrame(raf); raf = 0; } }
@@ -456,7 +456,8 @@
   function loop(now) {
     raf = 0;
     if (!pageVisible || !stageVisible || reduce) return;
-    var dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (lastPaint && now - lastPaint < frameInterval) { raf = requestAnimationFrame(loop); return; }
+    var dt = Math.min(0.05, (now - last) / 1000); last = now; lastPaint = now;
     step(dt);
     render(now / 1000);
     updateReadout();
@@ -595,12 +596,16 @@
       frame.style.height=naturalHeight+'px';
     }else if(e.data.type==='mg-close'){document.body.style.overflow='';}
   });
-  frame.addEventListener('load',function(){if(!frame.dataset.loaded)return;try{naturalHeight=Math.max(700,frame.contentDocument.documentElement.scrollHeight);frame.style.height=naturalHeight+'px';}catch(e){}});
+  frame.addEventListener('load',function(){if(!frame.dataset.loaded)return;try{naturalHeight=Math.max(700,frame.contentDocument.documentElement.scrollHeight);frame.style.height=naturalHeight+'px';}catch(e){}sendVisibility(true);});
   function loadGames(){if(frame.dataset.loaded)return;frame.dataset.loaded='true';frame.src=frame.dataset.src;}
+  function sendVisibility(visible){try{if(frame.contentWindow)frame.contentWindow.postMessage({type:'mg-visibility',visible:!!visible},location.origin);}catch(e){}}
   if('IntersectionObserver' in window){
-    var observer=new IntersectionObserver(function(entries){if(entries[0]&&entries[0].isIntersecting){loadGames();observer.disconnect();}},{rootMargin:'240px 0px'});
+    var observer=new IntersectionObserver(function(entries){
+      var visible=!!(entries[0]&&entries[0].isIntersecting);
+      if(visible){loadGames();sendVisibility(true);}else sendVisibility(false);
+    },{rootMargin:'80px 0px'});
     observer.observe(frame);
-  }else{loadGames();}
+  }else{loadGames();sendVisibility(true);}
 })();
 </script>
 <script type="module">
