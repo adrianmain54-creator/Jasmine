@@ -1580,3 +1580,19 @@
   }
   @media(hover:none){.tile:hover{transform:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 8px 22px rgba(0,0,0,.13)}}
 </style>
+
+<style id="jasmine-tight-game-controls">
+  /* Keep the play area close to its controls instead of stretching it across the overlay. */
+  .overlay{gap:6px}
+  .stage{flex:0 1 auto;height:min(62vh,560px);min-height:220px}
+  .ctrl{gap:8px;margin:0}
+  .hint{margin:0;min-height:1.1em}
+  @media(max-width:680px){
+    .overlay{gap:5px}
+    .stage{height:min(55vh,460px);min-height:190px}
+    .ctrl{gap:7px}
+  }
+  @media(max-height:620px){
+    .stage{height:min(50vh,390px);min-height:160px}
+  }
+</style>
