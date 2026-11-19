@@ -1,5 +1,5 @@
 -- Jasmine Bloom online game rooms
--- Run once in Supabase SQL Editor after social-chat.sql and chat-reliability.sql.
+-- Apply after social-chat.sql and chat-reliability.sql.
 create extension if not exists pgcrypto;
 
 create table if not exists public.game_rooms (
@@ -33,12 +33,8 @@ as $$
 declare v_room uuid;
 begin
   if auth.uid() is null then raise exception 'Sign in to create an online game'; end if;
-  if p_game_id is null or char_length(trim(p_game_id)) not between 1 and 40 then
-    raise exception 'Invalid game';
-  end if;
-  insert into public.game_rooms(game_id,host_id,current_turn)
-  values (trim(p_game_id),auth.uid(),auth.uid())
-  returning id into v_room;
+  if p_game_id is null or char_length(trim(p_game_id)) not between 1 and 40 then raise exception 'Invalid game'; end if;
+  insert into public.game_rooms(game_id,host_id,current_turn) values (trim(p_game_id),auth.uid(),auth.uid()) returning id into v_room;
   return v_room;
 end;
 $$;
@@ -52,15 +48,9 @@ begin
   select * into v_room from public.game_rooms where id=p_room_id for update;
   if not found then raise exception 'Game room not found'; end if;
   if v_room.host_id=auth.uid() then return v_room.id; end if;
-  if v_room.status <> 'waiting' or v_room.guest_id is not null then
-    raise exception 'This game room is already full';
-  end if;
-  if not public.jasmine_are_friends(v_room.host_id,auth.uid()) then
-    raise exception 'You can only play online with an accepted Jasmine friend';
-  end if;
-  update public.game_rooms
-    set guest_id=auth.uid(), status='playing', updated_at=now()
-    where id=v_room.id;
+  if v_room.status <> 'waiting' or v_room.guest_id is not null then raise exception 'This game room is already full'; end if;
+  if not public.jasmine_are_friends(v_room.host_id,auth.uid()) then raise exception 'You can only play online with an accepted Jasmine friend'; end if;
+  update public.game_rooms set guest_id=auth.uid(), status='playing', updated_at=now() where id=v_room.id;
   return v_room.id;
 end;
 $$;
@@ -71,8 +61,7 @@ as $$
 begin
   if auth.uid() is null then raise exception 'Sign in required'; end if;
   if p_status not in ('finished','cancelled') then raise exception 'Invalid room status'; end if;
-  update public.game_rooms
-    set status=p_status, updated_at=now()
+  update public.game_rooms set status=p_status, updated_at=now()
     where id=p_room_id and auth.uid() in (host_id,guest_id) and status='playing';
   if not found then raise exception 'Game room unavailable'; end if;
 end;
@@ -95,14 +84,18 @@ drop policy if exists "Game participants can send events" on public.game_room_ev
 create policy "Game participants can send events" on public.game_room_events
 for insert to authenticated with check (
   user_id=auth.uid() and exists (
-    select 1 from public.game_rooms r
-    where r.id=room_id and r.status='playing' and auth.uid() in (r.host_id,r.guest_id)
+    select 1 from public.game_rooms r where r.id=room_id and r.status='playing' and auth.uid() in (r.host_id,r.guest_id)
   )
 );
 
 grant select on public.game_rooms, public.game_room_events to authenticated;
 grant insert on public.game_room_events to authenticated;
 grant usage, select on sequence public.game_room_events_id_seq to authenticated;
+
+-- SECURITY DEFINER RPCs must not inherit PostgreSQL's default PUBLIC execute grant.
+revoke all on function public.jasmine_create_game_room(text) from public, anon;
+revoke all on function public.jasmine_join_game_room(uuid) from public, anon;
+revoke all on function public.jasmine_finish_game_room(uuid,text) from public, anon;
 grant execute on function public.jasmine_create_game_room(text) to authenticated;
 grant execute on function public.jasmine_join_game_room(uuid) to authenticated;
 grant execute on function public.jasmine_finish_game_room(uuid,text) to authenticated;
